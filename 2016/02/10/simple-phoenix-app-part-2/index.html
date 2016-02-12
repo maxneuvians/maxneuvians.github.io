@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Neuvians Innovation Inc.: Coin-toss.org / Simple Phoenix application - Part 2</title>
+<meta content='Summary The purpose of this post is to document the creation process of the Coin-toss.org website using the Phoenix Web application framework an...' name='description'>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1.0' name='viewport'>
+<meta content='IE=edge' http-equiv='X-UA-Compatible'>
+<meta content='True' name='HandheldFriendly'>
+<meta content='Neuvians Innovation Inc.' property='og:site_name'>
+<meta content='article' property='og:type'>
+<meta content='Coin-toss.org / Simple Phoenix application - Part 2' property='og:title'>
+<meta content='Summary The purpose of this post is to document the creation process of the Coin-toss.org website using the Phoenix Web application framework an...' property='og:description'>
+<meta content='http://www.neuvians.io/2016/02/10/simple-phoenix-app-part-2/' property='og:url'>
+<meta content='2016-02-10' property='article:published_time'>
+<meta content='summary' name='twitter:card'>
+<meta content='maxneuvians' name='twitter:site'>
+<meta content='Coin-toss.org / Simple Phoenix application - Part 2' name='twitter:title'>
+<meta content='Summary The purpose of this post is to document the creation process of the Coin-toss.org website using the Phoenix Web application framework an...' name='twitter:description'>
+<meta content='http://www.neuvians.io/2016/02/10/simple-phoenix-app-part-2/' name='twitter:url'>
+<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+<link href="/images/images/favicon.ico" rel="icon" type="image/ico" />
+<link href="/stylesheets/application-efc4a1c9.css" rel="stylesheet" />
+<link href='//fonts.googleapis.com/css?family=Open+Sans:700,400' rel='stylesheet' type='text/css'>
+</head>
+<body class='post-template nav-closed'>
+<div class='nav'>
+<h3 class='nav-title'>Menu</h3>
+<a class='nav-close' href='#'>
+<span class='hidden'>Close</span>
+</a>
+<ul>
+<li class='nav-home' role='presentation'>
+<a href='/'>Home</a>
+</li>
+</ul>
+<a class='subscribe-button icon-feed' href='/feed.xml'>Subscribe</a>
+</div>
+<span class='nav-cover'></span>
+
+<div class='site-wrapper'>
+<header class='main-header no-cover post-head'>
+<nav class='main-nav clearfix'>
+<a class='blog-logo post-logo' href='/'>
+<img alt="Neuvians Innovation Inc." src="/images/images/leaf.png" />
+</a>
+</nav>
+</header>
+<main class='content' role='main'>
+<article class='post'>
+<header class='post-header'>
+<h1 class='post-title'>Coin-toss.org / Simple Phoenix application - Part 2</h1>
+<section class='post-meta'>
+<time class='post-date' datetime='2016-02-10'>
+10 February 2016
+</time>
+on <a href='/tag/elixir/'>Elixir</a>, <a href='/tag/phoenix/'>Phoenix</a>
+</section>
+</header>
+<section class='post-content'><h4>Summary</h4>
+
+<p>The purpose of this post is to document the creation process of
+the <a rel="nofollow" href="http://Coin-toss.org">Coin-toss.org</a> website using the Phoenix Web
+application framework and the Elixir programming languages. Part 2 steps
+include:</p>
+
+<ul>
+<li>Replacing the existing template engine</li>
+<li>Creating a new controller and adding relevant functions</li>
+</ul>
+
+<p>Technology used:</p>
+
+<ul>
+<li>Elixir 1.2</li>
+<li>Phoenix 1.1.1</li>
+<li>Postgres 9.4</li>
+</ul>
+
+<h4>Replacing the existing template engine</h4>
+
+<p><code>EEx</code> is the default template engine in Phoenix, much like <code>Erb</code> is the default
+engine in Ruby on Rails. However, I have been using HTML for over 20 years and
+any second spent on writing a closing tag or reading non-indented source code
+is a second lost. Rails comes with a lot of great alternatives like <code>HAML</code> and
+<code>Slim</code>. Both of these have been moved to Elixir as well, with at the time of
+writing, the <code>HAML</code> implementation being less complete than the <code>Slim</code> one. I
+personally prefer <code>HAML</code> but <code>Slim</code> will do for now. Let me include the Elixir
+<code>Slim</code> package in my <code>mix.deps</code>:</p>
+<pre class="highlight plaintext"><code>defp deps do
+  [
+   {:base62, "~&gt; 1.1"},
+   {:phoenix, "~&gt; 1.1.1"},
+   {:phoenix_ecto, "~&gt; 2.0"},
+   {:postgrex, "&gt;= 0.0.0"},
+   {:phoenix_html, "~&gt; 2.3"},
+   {:phoenix_live_reload, "~&gt; 1.0", only: :dev},
+   {:phoenix_slime, "~&gt; 0.4.1"},
+   {:gettext, "~&gt; 0.9"},
+   {:cowboy, "~&gt; 1.0"}
+  ]
+end
+</code></pre>
+
+<p>and also activate the engine in <code>config/config.exs</code></p>
+<pre class="highlight plaintext"><code>config :phoenix, :template_engines,
+  slim: PhoenixSlime.Engine,
+  slime: PhoenixSlime.Engine
+</code></pre>
+
+<p>as well as add the extension to the watcher in <code>config/dev.exs</code></p>
+<pre class="highlight plaintext"><code># Watch static and templates for browser reloading.
+config :coin_toss, CoinToss.Endpoint,
+  live_reload: [
+    patterns: [
+      ~r{priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$},
+      ~r{priv/gettext/.*(po)$},
+      ~r{web/views/.*(ex)$},
+      ~r{web/templates/.*(eex|slim|slime)$}
+    ]
+  ]
+</code></pre>
+
+<p>now we just need to change our existing file from <code>.eex</code> to <code>.slim</code> in
+<code>web/templates</code>. We can use the following for <code>web/templates/layout/app.html.slim</code>:</p>
+<pre class="highlight plaintext"><code>doctype html
+html lang="en"
+  head
+    meta charset="utf-8"
+    meta content="IE=edge" http-equiv="X-UA-Compatible"
+    meta content="width=device-width, initial-scale=1" name="viewport"
+    meta content="" name="description"
+    meta content="" name="author"
+    title Hello CoinToss!
+    link rel="stylesheet" href="#{static_path(@conn, "/css/app.css")}"
+  body
+    .container
+      header.header
+        nav role="navigation"
+          ul.nav.nav-pills.pull-right
+            li
+              a href="http://www.phoenixframework.org/docs" Get Started
+        span.logo
+      p.alert.alert-info role="alert"= get_flash(@conn, :info)
+      p.alert.alert-danger role="alert"= get_flash(@conn, :error)
+      main role="main"
+        = render @view_module, @view_template, assigns
+    script src="#{static_path(@conn, "/js/app.js")}"
+</code></pre>
+
+<p>and the following for <code>web/tempates/page/index.html.slim</code>:</p>
+<pre class="highlight plaintext"><code>.jumbotron
+  h2= gettext("Welcome to %{name}", name: "Phoenix!")
+  p.lead
+    | A productive web framework that
+    br
+    | does not compromise speed and maintainability.
+.row.marketing
+  .col-lg-6
+    h4 Resources
+    ul
+      li
+        a href="http://phoenixframework.org/docs/overview" Guides
+      li
+        a href="http://hexdocs.pm/phoenix" Docs
+      li
+        a href="https://github.com/phoenixframework/phoenix" Source
+  .col-lg-6
+    h4 Help
+    ul
+      li
+        a href="http://groups.google.com/group/phoenix-talk" Mailing list
+      li
+        a href="http://webchat.freenode.net/?channels=elixir-lang" #elixir-lang on freenode IRC
+      li
+        a href="https://twitter.com/elixirphoenix" @elixirphoenix
+</code></pre>
+
+<p>Once again let us make sure this all has not broken anything fundamental:</p>
+<pre class="highlight plaintext"><code>$ mix test
+Compiled web/views/page_view.ex
+Compiled web/views/layout_view.ex
+.................
+
+Finished in 0.2 seconds (0.2s on load, 0.04s on tests)
+17 tests, 0 failures
+</code></pre>
+
+<h4>Creating a new controller and adding relevant functions</h4>
+
+<p>Now we could just use the default <code>PageController</code> to do all parts of the
+application but where is the fun in that? Also for clarity let us create a
+new controller called <code>TossController</code>. This also clearly links the controller
+to the <code>Toss</code> model. In terms of functions we really only need three:</p>
+
+<ul>
+<li><code>new</code> - This will render the initial form for a new coin toss</li>
+<li><code>create</code> - This will execute the coin toss from the posted form information</li>
+<li><code>show</code> - This will show the result for an executed coin toss.</li>
+</ul>
+
+<p>Let us go about scaffolding our three functions. In
+<code>web/controllers/toss_controller.ex</code> I will put:</p>
+<pre class="highlight plaintext"><code>defmodule CoinToss.TossController do
+  use CoinToss.Web, :controller
+
+  alias CoinToss.Toss
+
+  def create(conn, %{"toss" =&gt; toss_params}) do
+  end
+
+  def new(conn, _params) do
+  end
+
+  def show(conn, %{"id" =&gt; id}) do
+  end
+end
+</code></pre>
+
+<p>You can see I am using pattern matching on the second passed value to cherry pick
+the values I want. This also ensures that only correct requests are processed as
+any non-matching request gets ignored. We should also create the <code>view</code> controller and
+template files. Ex. <code>web/views/toss_view.ex</code> do:</p>
+<pre class="highlight plaintext"><code>defmodule CoinToss.TossView do
+  use CoinToss.Web, :view
+end
+</code></pre>
+
+<p>and add empty <code>new.html.slim</code> and <code>show.html.slim</code> files to <code>web/templates/toss/</code>.</p>
+
+<p>Lets start getting this all hooked up and tested by focusing on the easiest
+function first: <code>new</code>. I made the following change to
+<code>web/controllers/toss_controller.ex</code>:</p>
+<pre class="highlight plaintext"><code>def new(conn, _params) do
+  changeset = Toss.changeset(%Toss{})
+  render conn, "new.html", changeset: changeset
+end
+</code></pre>
+
+<p>As we want to render a form of the <code>Toss</code> model we need to pass the view a
+<code>changeset</code> of the model. This will allow the Phoenix form helper to create a
+form for the model in HTML. Before we go any further we should also add our
+controller to  <code>web/router.ex</code> file so we can start testing. Let us add it as a
+resource with limited methods:</p>
+<pre class="highlight plaintext"><code>scope "/", CoinToss do
+  pipe_through :browser # Use the default browser stack
+
+  get "/", PageController, :index
+  resources "/toss", TossController, only: [:new, :create, :show]
+end
+</code></pre>
+
+<p>If we run <code>mix phoenix.routes</code> we can now see the effect:</p>
+<pre class="highlight plaintext"><code>$ mix phoenix.routes
+page_path  GET   /          CoinToss.PageController :index
+toss_path  GET   /toss/new  CoinToss.TossController :new
+toss_path  GET   /toss/:id  CoinToss.TossController :show
+toss_path  POST  /toss      CoinToss.TossController :create
+</code></pre>
+
+<p>At this point we might as well change the default path to the <code>TossController.new/2</code>
+function but replacing <code>get &quot;/&quot;, PageController, :index</code> with <code>get &quot;/&quot;, TossController, :new</code></p>
+<pre class="highlight plaintext"><code>$ mix phoenix.routes
+toss_path  GET   /          CoinToss.TossController :new
+toss_path  GET   /toss/new  CoinToss.TossController :new
+toss_path  GET   /toss/:id  CoinToss.TossController :show
+toss_path  POST  /toss      CoinToss.TossController :create
+</code></pre>
+
+<p>At this point we might as well remove all the remnants of the <code>PageController</code>
+as there are no more paths leading to it. Delete the following files:</p>
+<pre class="highlight plaintext"><code>web/controller/page_controller.ex
+test/controller/page_controller_test.ex
+web/view/page_view.ex
+web/templates/page
+</code></pre>
+
+<p>and <code>mix.test</code></p>
+<pre class="highlight plaintext"><code>$ mix test
+Generated coin_toss app
+................
+
+Finished in 0.2 seconds (0.2s on load, 0.02s on tests)
+16 tests, 0 failures
+</code></pre>
+
+<p>Next let us create a new test for the <code>TossController.new/1</code> function. In
+<code>test/controllers/toss_controller_test.exs</code> add:</p>
+<pre class="highlight plaintext"><code>defmodule CoinToss.TossControllerTest do
+  use CoinToss.ConnCase
+
+  alias CoinToss.{Repo, Toss}
+
+  test "GET /", %{conn: conn} do
+    conn = get conn, "/"
+    assert html_response(conn, 200)
+  end
+
+  test "GET /toss/new", %{conn: conn} do
+    conn = get conn, toss_path(conn, :new)
+    assert html_response(conn, 200)
+  end
+end
+</code></pre>
+
+<p>and <code>mix test</code>:</p>
+<pre class="highlight plaintext"><code>$ mix test
+..................
+
+Finished in 0.3 seconds (0.2s on load, 0.05s on tests)
+18 tests, 0 failures
+</code></pre>
+
+<p>The great thing about MVC frameworks is that you can test most of the code
+without ever writing any HTML. Is it a good idea in the long run? No - but in
+the short term it makes sense. The next function to tackle is <code>.show/2</code> as we
+can easily create a new model using our test suite. Change the existing code for
+<code>show/2</code> in <code>toss_controller.ex</code> to something like this:</p>
+<pre class="highlight plaintext"><code>def show(conn, %{"id" =&gt; id}) do
+  toss = Repo.get!(Toss, id)
+  render conn, "show.html", toss: toss
+end
+</code></pre>
+
+<p>All we are doing is getting a <code>Toss</code> model for a specific ID. As we are using
+the <code>get!</code> call on <code>Repo</code> we are expecting one result back or an error if it is
+not found. Let&rsquo;s add the the tests to <code>toss_controller_test.exs</code>:</p>
+<pre class="highlight plaintext"><code>test "GET /toss/:id when a toss exists", %{conn: conn} do
+  toss = Toss.changeset(%Toss{}, %{heads: "A", tails: "B", ip: "C"}) |&gt; Repo.insert!
+  conn = get conn, toss_path(conn, :show, toss)
+  assert html_response(conn, 200)
+end
+
+test "GET /toss/:id when a toss does not exists", %{conn: conn} do
+  assert_raise(Ecto.NoResultsError, fn -&gt; get(conn, toss_path(conn, :show, 1)) end)
+end
+</code></pre>
+
+<p>and again our friend <code>mix test</code>:</p>
+<pre class="highlight plaintext"><code>$ mix test
+....................
+
+Finished in 0.3 seconds (0.2s on load, 0.07s on tests)
+20 tests, 0 failures
+</code></pre>
+
+<p>All that leaves is the <code>create/2</code> function to implement. I will go ahead and do
+that right now, replacing the function in <code>toss_controller.ex</code>:</p>
+<pre class="highlight plaintext"><code>def create(conn, %{"toss" =&gt; toss_params}) do
+  ip = get_ip(conn)
+  changeset = Toss.changeset(%Toss{}, Map.merge(toss_params, %{"ip" =&gt; ip}))
+  case Repo.insert(changeset) do
+    {:ok, toss} -&gt;
+      conn
+      |&gt; redirect(to: toss_path(conn, :show, toss))
+    {:error, changeset} -&gt;
+      render(conn, "new.html", changeset: changeset)
+  end
+end
+</code></pre>
+
+<p>and adding in a new private function, <code>get_ip/1</code> at the bottom of the file:</p>
+<pre class="highlight plaintext"><code>defp get_ip(conn) do
+  conn.remote_ip
+    |&gt; Tuple.to_list
+    |&gt; Enum.join(".")
+end
+</code></pre>
+
+<p>All we are doing here is taking the <code>toss_params</code> and using them to create a
+new <code>changeset</code>. We also merge the IP address in which is contained in the <code>conn</code>
+struct that is passed to all requests in the application. We then insert the
+<code>changeset</code> and in case it fails render the <code>new</code> template again with the
+<code>changeset</code>. In case it succeeds we redirect to the <code>show/2</code> function. Let us add
+the remaining tests to <code>toss_controller_test.exs</code>:</p>
+<pre class="highlight plaintext"><code>test "POST /toss creates a new toss if all the required fields are available", %{conn: conn} do
+  conn = post conn, toss_path(conn, :create), %{toss: %{heads: "A", tails: "B"}}
+  assert Repo.get_by(Toss, heads: "A")
+  assert html_response(conn, 302)
+end
+
+test "POST /toss does not creates a new toss if any of the required fields are missing", %{conn: conn} do
+  conn = post conn, toss_path(conn, :create), %{toss: %{heads: "A"}}
+  refute Repo.get_by(Toss, heads: "A")
+  assert html_response(conn, 200)
+end
+</code></pre>
+
+<p>and as usual <code>mix test</code>:</p>
+<pre class="highlight plaintext"><code>$ mix test
+......................
+
+Finished in 0.3 seconds (0.2s on load, 0.07s on tests)
+22 tests, 0 failures
+</code></pre>
+
+<p>Looks like we are all good.</p>
+
+<h4>Conclusion</h4>
+
+<p>We have replaced the default template engine, replace the existing <code>EEx</code> files
+and scaffolded some basic controller functions. In the next part we will
+Add additional <code>Changeset</code> functions to the <code>Toss</code> model and create a new
+new custom <code>Ecto</code> data type for <code>results</code>.</p>
+</section>
+<footer class='post-footer'>
+<figure class='author-image'>
+<a class='img' href='/author/max-neuvians/' style='background-image: url(https://www.gravatar.com/avatar/8b8b2f3881b25d0c7506dd5738c3be50?size=68)'>
+<span class='hidden'>Max Neuvians's Picture</span>
+</a>
+</figure>
+<section class='author'>
+<h4>
+<a href='/author/max-neuvians/'>Max Neuvians</a>
+</h4>
+<p></p>
+Read
+<a href='/author/max-neuvians/'>more posts</a>
+by this author.
+<div class='author-meta'>
+<span class='author-location icon-location'>Ottawa, ON, Canada</span>
+<span class='author-link icon-link'>
+<a href='http://neuvians.io'>http://neuvians.io</a>
+</span>
+</div>
+</section>
+<section class='share'>
+<h4>Share this post</h4>
+<a class='icon-twitter' href='https://twitter.com/intent/tweet?text=Coin-toss.org / Simple Phoenix application - Part 2&amp;amp;url=http://www.neuvians.io/2016/02/10/simple-phoenix-app-part-2/' onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+<span class='hidden'>Twitter</span>
+</a>
+<a class='icon-facebook' href='https://www.facebook.com/sharer/sharer.php?u=http://www.neuvians.io/2016/02/10/simple-phoenix-app-part-2/' onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+<span class='hidden'>Facebook</span>
+</a>
+<a class='icon-google-plus' href='https://plus.google.com/share?url=http://www.neuvians.io/2016/02/10/simple-phoenix-app-part-2/' onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+<span class='hidden'>Google+</span>
+</a>
+</section>
+</footer>
+</article>
+</main>
+<aside class='read-next'>
+<a class='no-cover read-next-story' href='/2016/02/09/simple-phoenix-app-part-1/'>
+<section class='post'>
+<h2>Coin-toss.org / Simple Phoenix application - Part 1</h2>
+<p>Summary The purpose of this post is to document the creation process of the Coin-toss.org website using the Phoenix&hellip;</p>
+</section>
+</a>
+<a class='no-cover prev read-next-story' href='/2016/02/11/simple-phoenix-app-part-3/'>
+<section class='post'>
+<h2>Coin-toss.org / Simple Phoenix application - Part 3</h2>
+<p>Summary The purpose of this post is to document the creation process of the Coin-toss.org website using the Phoenix&hellip;</p>
+</section>
+</a>
+</aside>
+
+<footer class='site-footer clearfix'>
+<section class='copyright'>
+<a href='/'>Neuvians Innovation Inc.</a>
+&copy;
+2016
+</section>
+<section class='poweredby'>
+Casper theme powered by
+<a href='https://ghost.org'>Ghost | Modified by Neuvians.io</a>
+</section>
+</footer>
+</div>
+<script src="/javascripts/application-56b44bb3.js"></script>
+</body>
+</html>

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Neuvians Innovation Inc.: Coin-toss.org / Simple Phoenix application - Part 1</title>
+<meta content='Summary The purpose of this post is to document the creation process of the Coin-toss.org website using the Phoenix Web application framework an...' name='description'>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1.0' name='viewport'>
+<meta content='IE=edge' http-equiv='X-UA-Compatible'>
+<meta content='True' name='HandheldFriendly'>
+<meta content='Neuvians Innovation Inc.' property='og:site_name'>
+<meta content='article' property='og:type'>
+<meta content='Coin-toss.org / Simple Phoenix application - Part 1' property='og:title'>
+<meta content='Summary The purpose of this post is to document the creation process of the Coin-toss.org website using the Phoenix Web application framework an...' property='og:description'>
+<meta content='http://www.neuvians.io/2016/02/09/simple-phoenix-app-part-1/' property='og:url'>
+<meta content='2016-02-09' property='article:published_time'>
+<meta content='summary' name='twitter:card'>
+<meta content='maxneuvians' name='twitter:site'>
+<meta content='Coin-toss.org / Simple Phoenix application - Part 1' name='twitter:title'>
+<meta content='Summary The purpose of this post is to document the creation process of the Coin-toss.org website using the Phoenix Web application framework an...' name='twitter:description'>
+<meta content='http://www.neuvians.io/2016/02/09/simple-phoenix-app-part-1/' name='twitter:url'>
+<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+<link href="/images/images/favicon.ico" rel="icon" type="image/ico" />
+<link href="/stylesheets/application-efc4a1c9.css" rel="stylesheet" />
+<link href='//fonts.googleapis.com/css?family=Open+Sans:700,400' rel='stylesheet' type='text/css'>
+</head>
+<body class='post-template nav-closed'>
+<div class='nav'>
+<h3 class='nav-title'>Menu</h3>
+<a class='nav-close' href='#'>
+<span class='hidden'>Close</span>
+</a>
+<ul>
+<li class='nav-home' role='presentation'>
+<a href='/'>Home</a>
+</li>
+</ul>
+<a class='subscribe-button icon-feed' href='/feed.xml'>Subscribe</a>
+</div>
+<span class='nav-cover'></span>
+
+<div class='site-wrapper'>
+<header class='main-header no-cover post-head'>
+<nav class='main-nav clearfix'>
+<a class='blog-logo post-logo' href='/'>
+<img alt="Neuvians Innovation Inc." src="/images/images/leaf.png" />
+</a>
+</nav>
+</header>
+<main class='content' role='main'>
+<article class='post'>
+<header class='post-header'>
+<h1 class='post-title'>Coin-toss.org / Simple Phoenix application - Part 1</h1>
+<section class='post-meta'>
+<time class='post-date' datetime='2016-02-09'>
+09 February 2016
+</time>
+on <a href='/tag/elixir/'>Elixir</a>, <a href='/tag/phoenix/'>Phoenix</a>
+</section>
+</header>
+<section class='post-content'><h4>Summary</h4>
+
+<p>The purpose of this post is to document the creation process of
+the <a rel="nofollow" href="http://Coin-toss.org">Coin-toss.org</a> website using the Phoenix Web
+application framework and the Elixir programming languages. Part 1 steps
+include:</p>
+
+<ul>
+<li>Developing a data model</li>
+<li>Creating a new phoenix application</li>
+<li>Implementing a model using Ecto</li>
+<li>Creating a custom data type</li>
+<li>Testing the data model</li>
+</ul>
+
+<p>Technology used:</p>
+
+<ul>
+<li>Elixir 1.2</li>
+<li>Phoenix 1.1.1</li>
+<li>Postgres 9.4</li>
+</ul>
+
+<h4>Premise</h4>
+
+<p>The basic idea behind the coin-toss.org web is to create an application through
+which users can simulate a coin toss between two options and guarantee a 50/50
+chance of either option being shown. There are ample applications out there that
+already do this, but coin-toss.org comes with an additional feature - it will
+record the outcome and save it with a unique link to the result can be shared.</p>
+
+<p>Additionally the application will show a list of similar coin flips preformed
+recently which may have been made to force a particular outcome - consider it a
+basic device for ensuring authenticity of the flip.</p>
+
+<p>The application itself it not complex or difficult to implement - but
+developing it will shed some insight into how a basic Phoenix application is
+structured.</p>
+
+<h4>Developing a data model</h4>
+
+<p>A coin flip event is straight forward - there is an option for heads and an
+option for tales. The data model should also record the outcome and the
+timestamp when the flip was made. We also have the requirement of showing
+similar coin flips so we are going to create hash of the coin flip that we can
+use to compare with other coin flips. Tracking the IP of the coin flipper might
+also come in handy.</p>
+
+<p>Additionally we want to come up with a unique ID for the coin flip that can
+easily be shared. Most databases already come with a unique ID for a row
+in a table, but where is the fun in that. Instead we will generate a short-url
+type string that represent the coin flip event.</p>
+
+<p>In summary we probably need the following data fields:</p>
+
+<ul>
+<li>Unique ID</li>
+<li>Heads Option</li>
+<li>Tails Option</li>
+<li>Result</li>
+<li>Hash</li>
+<li>IP</li>
+<li>Timestamp</li>
+</ul>
+
+<p>Using Elixir&rsquo;s <em>Ecto</em> we can easily achieve this and I will show you how
+shortly but first we should create a new Phoenix application.</p>
+
+<h4>Creating a new phoenix application</h4>
+
+<p>Assuming you have installed everything as per the
+<a rel="nofollow" href="Phoenix installation guide">http://www.phoenixframework.org/docs/installation</a>
+this should be straight forward process:</p>
+
+<p><code>$ mix phoenix.new coin_toss</code></p>
+
+<p>Once you have completed the process and run all the recommended commands ex:</p>
+
+<p><code>mix ecto.create</code></p>
+
+<p>I always recommend running the test suite to make sure nothing is broken from
+the get go:</p>
+
+<p><code>mix test</code></p>
+
+<p>and after compiling the app again, it should say something like</p>
+<pre class="highlight plaintext"><code>....
+
+Finished in 0.4 seconds (0.4s on load, 0.00s on tests)
+4 tests, 0 failures
+
+Randomized with seed 621007
+</code></pre>
+
+<p>and you are done!</p>
+
+<h4>Implementing a model using Ecto</h4>
+
+<p>Much like in any other framework you can use a command-line tool to do most of
+the heavy lifting for you. To create our <code>Toss</code> model in Phoenix use the following
+command:</p>
+
+<p><code>mix phoenix.gen.model Toss tossess heads:string tails:string result:integer hash:string ip:string</code></p>
+
+<p>A primary ID and a timestamp are automatically added by <code>Ecto</code>. As we want to
+use our <code>hash</code> attribute comparatively it makes sense to add an index.</p>
+
+<p>I added this to my <code>*_create_toss.ex</code> in <code>priv/repo/migrations</code>:</p>
+<pre class="highlight plaintext"><code>def change do
+  create table(:tossess) do
+    add :heads, :string
+    add :tails, :string
+    add :result, :integer
+    add :hash, :string
+    add :ip, :string
+
+    timestamps
+  end
+
+  index(:tossess, [:hash])
+
+end
+</code></pre>
+
+<p>Run the migration <code>mix ecto.migrate</code> and the let us test again to make sure
+all is ok:</p>
+<pre class="highlight plaintext"><code>......
+
+Finished in 0.2 seconds (0.2s on load, 0.03s on tests)
+6 tests, 0 failures
+</code></pre>
+
+<p>looks like two more test were added and they passed. Let us take a look at the
+model itself: <code>web/models/toss.ex</code>. You may note that all our fields are required.</p>
+<pre class="highlight plaintext"><code>@required_fields ~w(heads tails result hash ip)
+@optional_fields ~w()
+</code></pre>
+
+<p>I changed that to:</p>
+<pre class="highlight plaintext"><code>@required_fields ~w(heads tails ip)
+@optional_fields ~w()
+</code></pre>
+
+<p>as we only need to require <code>heads</code>, <code>tails</code>, and <code>ip</code> because <code>result</code> and <code>hash</code> are
+calculated by the model itself. If you look in your model
+test file: <code>test/models/toss_test.exs</code> you will see that we need to remove these
+from the <code>@valid_attrs</code> map and replace it with some content:</p>
+<pre class="highlight plaintext"><code>@valid_attrs %{heads: "efgh", ip: "some content", tails: "abcd"}
+@invalid_attrs %{}
+</code></pre>
+
+<h4>Creating a custom data type</h4>
+
+<p>You may recall our requirement of having a short-url code that references a
+particular coin toss event. In other frameworks you could create another field
+in the model, set an index on it, and be done. In <code>Ecto</code> we can take advantage
+of custom data types that will encode and decode data before it interacts with
+the database. There is a great introduction to custom data types
+<a rel="nofollow" href="http://learningelixir.joekain.com/custom-types-in-ecto/">here</a>. All to say that
+a custom data type has to implement certain functions that convert data back and
+forth between your schema and something the database understands.</p>
+
+<p>A short-url is a compressed url that can be expanded. Examples of url shorteners are
+t.co, ow.ly, and is.gd. In our case we are interested in compressing the primary ID of
+the coin toss so that it can be expanded again later. One really simple way to do
+this with a Base conversion, so taking a Base 10 number, and converting it into another
+Base that can use other URL safe numbers and letters, such as <code>ABCD</code>. As you can have one letter
+ex <code>A</code> equal a two digit number ex. <code>11</code> one sees how you can shorten a long
+integer into shorter and shorter strings. As this is a simple mathematical process,
+you can also reverse it and replace any instance you see an <code>A</code> with <code>11</code>. A <code>Base62</code>
+code set is a great place to start as it include all the letters and all the digits
+<code>[A-Za-z0-9]</code>. This ensures that any encoded string is URL safe.</p>
+
+<p>We could easily write our own base converter, but there conveniently already exists
+a library for Elixir called <code>Base62</code>. Include that in our <code>mix.deps</code> file:</p>
+<pre class="highlight plaintext"><code>defp deps do
+  [
+   {:base62, "~&gt; 1.1"},
+   {:phoenix, "~&gt; 1.1.1"},
+   {:phoenix_ecto, "~&gt; 2.0"},
+   {:postgrex, "&gt;= 0.0.0"},
+   {:phoenix_html, "~&gt; 2.3"},
+   {:phoenix_live_reload, "~&gt; 1.0", only: :dev},
+   {:gettext, "~&gt; 0.9"},
+   {:cowboy, "~&gt; 1.0"}
+  ]
+end
+</code></pre>
+
+<p>run <code>mix deps.get</code> and you are good to go. We can even play with our new library
+in ie <code>IEX</code> console to ensure that it works:</p>
+<pre class="highlight plaintext"><code>$ iex -S mix
+
+Interactive Elixir (1.2.0) - press Ctrl+C to exit (type h() ENTER for help)
+iex(1)&gt; Base62.encode(1234567890)
+"1LY7VK"
+</code></pre>
+
+<p>So you can see we have gotten almost a 50% improvement on characters used.</p>
+
+<p>The plan of action is is as follows: As a new record is created in the database
+it is assigned a positive integer primary ID. When we query that record by ID,
+instead of using the integer, we would like to use the <code>Base62</code> conversion of that
+ID. Similarly when we look at the ID attribute of that record we want it to return
+the <code>Base62</code> conversion of the ID, not the ID itself.</p>
+
+<p>Let us create a new module that implements the above described behavior. In
+<code>lib/ecto_short_url_id.ex</code> add the following:</p>
+<pre class="highlight plaintext"><code>defmodule CoinToss.EctoShortUrlId do
+  @behaviour Ecto.Type
+
+  def type, do: :id
+
+  def cast(string) when is_binary(string) do
+    case Base62.decode(string) do
+      {:ok, int} when int &gt; 0 -&gt; {:ok, int}
+      _ -&gt; :error
+    end
+  end
+
+  def cast(int) when is_integer(int), do: {:ok, int}
+  def cast(_), do: :error
+
+  def dump(int) when is_integer(int), do: {:ok, int}
+  def dump(_), do: :error
+
+  def load(int) when is_integer(int), do: {:ok, Base62.encode(int)}
+  def load(_), do: :error
+end
+</code></pre>
+
+<p>As you can see I am making liberal use of Elixir&rsquo;s pattern matching to make sure
+that only valid inputs get run through the <code>Base62</code> conversion. Let us also create
+some tests to make sure all this works. In <code>test/lib/ecto_short_url_id_test.exs</code>
+add:</p>
+<pre class="highlight plaintext"><code>defmodule CoinToss.EctoShortUrlIdTest do
+  use ExUnit.Case
+
+  import CoinToss.EctoShortUrlId
+
+  test "type/0 returns the :id atom" do
+    assert type == :id
+  end
+
+  test "cast/1 returns an integer from a Base62 string" do
+    assert cast("1LY7VK") == {:ok, 1234567890}
+  end
+
+  test "cast/1 returns an error if the string is not Base62 encoded" do
+    assert cast("=") == :error
+  end
+
+  test "cast/1 returns an integer if an integer is passed" do
+    assert cast(1) == {:ok, 1}
+  end
+
+  test "cast/1 returns an :error if anything but an integer or binary is passed" do
+    assert cast(false) == :error
+  end
+
+  test "dump/1 returns an integer is the input is an integer" do
+    assert dump(1) == {:ok, 1}
+  end
+
+  test "dump/1 returns an :error is the input is no an integer" do
+    assert dump("ABCD") == :error
+  end
+
+  test "load/1 encodes an integer into Base62" do
+    assert load(1234567890) == {:ok, "1LY7VK"}
+  end
+
+  test "load/1 returns an error unless an integer is passed" do
+    assert load("ABCD") == :error
+  end
+end
+</code></pre>
+
+<p>running <code>mix test</code> we get:</p>
+<pre class="highlight plaintext"><code>$ mix test
+...............
+
+Finished in 0.2 seconds (0.2s on load, 0.03s on tests)
+15 tests, 0 failures
+</code></pre>
+
+<h4>Testing the data model</h4>
+
+<p>The next step is to change our existing <code>Toss</code> schema to use the <code>EctoShortUrlId</code>
+as a custom ID type instead of a positive integer.</p>
+
+<p>Let make the following modifications to <code>web/models/toss.ex</code>:</p>
+<pre class="highlight plaintext"><code>use CoinToss.Web, :model
+
+@primary_key {:id, CoinToss.EctoShortUrlId, autogenerate: true}
+
+schema "tossess" do
+</code></pre>
+
+<p>This will tell <code>Ecto</code> to use our custom data type as the primary key.
+Let me make sure I did not break anything outright:</p>
+<pre class="highlight plaintext"><code>$ mix test
+Compiled web/models/toss.ex
+...............
+
+Finished in 0.2 seconds (0.2s on load, 0.03s on tests)
+15 tests, 0 failures
+</code></pre>
+
+<p>looks like it did not break anything immediate. However, nothing specific was tested
+either, but at least we know that we are starting from a clean slate. Now to add some
+additional tests to <code>test\models\toss_test.exs</code>:</p>
+<pre class="highlight plaintext"><code>test "model returns a Base62 encoded version of its id" do
+  toss = Toss.changeset(%Toss{}, @valid_attrs) |&gt; Repo.insert!
+  assert {:ok, _id} = Base62.decode(toss.id)
+end
+
+test "model can be queried by the Base62 version of its id" do
+  toss = Toss.changeset(%Toss{}, @valid_attrs) |&gt; Repo.insert!
+  assert Repo.get!(Toss, toss.id)
+end
+</code></pre>
+
+<p>and run our suite <code>mix test</code>:</p>
+<pre class="highlight plaintext"><code>$ mix test
+.................
+
+Finished in 0.2 seconds (0.2s on load, 0.05s on tests)
+17 tests, 0 failures
+</code></pre>
+
+<p>Looks like we are all good.</p>
+
+<h4>Conclusion</h4>
+
+<p>In a somewhat verbose manner I have set up Phoenix, created a model, and added
+a custom <code>Ecto</code> ID type. I have also provided tests for all modifications. The
+next part will tackle the controller and view components of our application.</p>
+</section>
+<footer class='post-footer'>
+<figure class='author-image'>
+<a class='img' href='/author/max-neuvians/' style='background-image: url(https://www.gravatar.com/avatar/8b8b2f3881b25d0c7506dd5738c3be50?size=68)'>
+<span class='hidden'>Max Neuvians's Picture</span>
+</a>
+</figure>
+<section class='author'>
+<h4>
+<a href='/author/max-neuvians/'>Max Neuvians</a>
+</h4>
+<p></p>
+Read
+<a href='/author/max-neuvians/'>more posts</a>
+by this author.
+<div class='author-meta'>
+<span class='author-location icon-location'>Ottawa, ON, Canada</span>
+<span class='author-link icon-link'>
+<a href='http://neuvians.io'>http://neuvians.io</a>
+</span>
+</div>
+</section>
+<section class='share'>
+<h4>Share this post</h4>
+<a class='icon-twitter' href='https://twitter.com/intent/tweet?text=Coin-toss.org / Simple Phoenix application - Part 1&amp;amp;url=http://www.neuvians.io/2016/02/09/simple-phoenix-app-part-1/' onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+<span class='hidden'>Twitter</span>
+</a>
+<a class='icon-facebook' href='https://www.facebook.com/sharer/sharer.php?u=http://www.neuvians.io/2016/02/09/simple-phoenix-app-part-1/' onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+<span class='hidden'>Facebook</span>
+</a>
+<a class='icon-google-plus' href='https://plus.google.com/share?url=http://www.neuvians.io/2016/02/09/simple-phoenix-app-part-1/' onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+<span class='hidden'>Google+</span>
+</a>
+</section>
+</footer>
+</article>
+</main>
+<aside class='read-next'>
+<a class='no-cover prev read-next-story' href='/2016/02/10/simple-phoenix-app-part-2/'>
+<section class='post'>
+<h2>Coin-toss.org / Simple Phoenix application - Part 2</h2>
+<p>Summary The purpose of this post is to document the creation process of the Coin-toss.org website using the Phoenix&hellip;</p>
+</section>
+</a>
+</aside>
+
+<footer class='site-footer clearfix'>
+<section class='copyright'>
+<a href='/'>Neuvians Innovation Inc.</a>
+&copy;
+2016
+</section>
+<section class='poweredby'>
+Casper theme powered by
+<a href='https://ghost.org'>Ghost | Modified by Neuvians.io</a>
+</section>
+</footer>
+</div>
+<script src="/javascripts/application-56b44bb3.js"></script>
+</body>
+</html>
