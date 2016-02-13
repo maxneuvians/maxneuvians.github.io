@@ -19,26 +19,32 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>http://www.neuvians.io/googlef4c09d3e70c6969f/index.html</loc>
+    <lastmod>2016-02-13T12:16:45-05:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>http://www.neuvians.io/index.html</loc>
-    <lastmod>2016-02-12T11:18:02-05:00</lastmod>
+    <lastmod>2016-02-13T12:16:45-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/author/max-neuvians/index.html</loc>
-    <lastmod>2016-02-12T11:18:02-05:00</lastmod>
+    <lastmod>2016-02-13T12:16:45-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/tag/elixir/index.html</loc>
-    <lastmod>2016-02-12T11:18:02-05:00</lastmod>
+    <lastmod>2016-02-13T12:16:45-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/tag/phoenix/index.html</loc>
-    <lastmod>2016-02-12T11:18:02-05:00</lastmod>
+    <lastmod>2016-02-13T12:16:45-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
