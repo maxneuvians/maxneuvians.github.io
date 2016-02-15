@@ -5,16 +5,32 @@
   <id>http://www.neuvians.io</id>
   <link href="http://www.neuvians.io"/>
   <link href="http://www.neuvians.io/feed.xml" rel="self"/>
-  <updated>2016-02-10T19:00:00-05:00</updated>
+  <updated>2016-02-14T19:00:00-05:00</updated>
   <author>
     <name>Max Neuvians</name>
   </author>
+  <entry>
+    <title>Coin-toss.org / Simple Phoenix application - Part 4</title>
+    <link rel="alternate" href="http://www.neuvians.io/2016/02/15/simple-phoenix-app-part-4/"/>
+    <id>http://www.neuvians.io/2016/02/15/simple-phoenix-app-part-4/</id>
+    <published>2016-02-14T19:00:00-05:00</published>
+    <updated>2016-02-15T13:56:18-05:00</updated>
+    <author>
+      <name>Max Neuvians</name>
+    </author>
+    <summary type="html">Summary
+
+The purpose of this post is to document the creation process of
+the Coin-toss.org website using the Phoenix Web
+application framework and the Elixir programming languages. Part 4 steps
+include</summary>
+  </entry>
   <entry>
     <title>Coin-toss.org / Simple Phoenix application - Part 3</title>
     <link rel="alternate" href="http://www.neuvians.io/2016/02/11/simple-phoenix-app-part-3/"/>
     <id>http://www.neuvians.io/2016/02/11/simple-phoenix-app-part-3/</id>
     <published>2016-02-10T19:00:00-05:00</published>
-    <updated>2016-02-12T11:02:26-05:00</updated>
+    <updated>2016-02-15T13:54:47-05:00</updated>
     <author>
       <name>Max Neuvians</name>
     </author>
