@@ -25,32 +25,38 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>http://www.neuvians.io/2016/02/16/simple-phoenix-app-part-5/index.html</loc>
+    <lastmod>2016-02-16T10:40:36-05:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>http://www.neuvians.io/googlef4c09d3e70c6969f/index.html</loc>
-    <lastmod>2016-02-15T13:56:32-05:00</lastmod>
+    <lastmod>2016-02-16T10:42:09-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/index.html</loc>
-    <lastmod>2016-02-15T13:56:32-05:00</lastmod>
+    <lastmod>2016-02-16T10:42:09-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/author/max-neuvians/index.html</loc>
-    <lastmod>2016-02-15T13:56:32-05:00</lastmod>
+    <lastmod>2016-02-16T10:42:09-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/tag/elixir/index.html</loc>
-    <lastmod>2016-02-15T13:56:32-05:00</lastmod>
+    <lastmod>2016-02-16T10:42:09-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/tag/phoenix/index.html</loc>
-    <lastmod>2016-02-15T13:56:32-05:00</lastmod>
+    <lastmod>2016-02-16T10:42:09-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
