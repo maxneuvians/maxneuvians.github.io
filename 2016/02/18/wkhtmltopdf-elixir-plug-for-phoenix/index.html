@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Neuvians Innovation Inc.: Using WKHTMLTOPDF in Phoenix as a Plug</title>
+<meta content='One really nice feature in the Rails world is the use of middleware to intercept requests and transform the output. This also exists in Elixir /...' name='description'>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1.0' name='viewport'>
+<meta content='IE=edge' http-equiv='X-UA-Compatible'>
+<meta content='True' name='HandheldFriendly'>
+<meta content='Neuvians Innovation Inc.' property='og:site_name'>
+<meta content='article' property='og:type'>
+<meta content='Using WKHTMLTOPDF in Phoenix as a Plug' property='og:title'>
+<meta content='One really nice feature in the Rails world is the use of middleware to intercept requests and transform the output. This also exists in Elixir /...' property='og:description'>
+<meta content='http://www.neuvians.io/2016/02/18/wkhtmltopdf-elixir-plug-for-phoenix/' property='og:url'>
+<meta content='2016-02-18' property='article:published_time'>
+<meta content='summary' name='twitter:card'>
+<meta content='maxneuvians' name='twitter:site'>
+<meta content='Using WKHTMLTOPDF in Phoenix as a Plug' name='twitter:title'>
+<meta content='One really nice feature in the Rails world is the use of middleware to intercept requests and transform the output. This also exists in Elixir /...' name='twitter:description'>
+<meta content='http://www.neuvians.io/2016/02/18/wkhtmltopdf-elixir-plug-for-phoenix/' name='twitter:url'>
+<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+<link href="/images/images/favicon.ico" rel="icon" type="image/ico" />
+<link href="/stylesheets/application.css" rel="stylesheet" />
+<link href='//fonts.googleapis.com/css?family=Open+Sans:700,400' rel='stylesheet' type='text/css'>
+</head>
+<body class='post-template nav-closed'>
+<div class='nav'>
+<h3 class='nav-title'>Menu</h3>
+<a class='nav-close' href='#'>
+<span class='hidden'>Close</span>
+</a>
+<ul>
+<li class='nav-home' role='presentation'>
+<a href='/'>Home</a>
+</li>
+</ul>
+<a class='subscribe-button icon-feed' href='/feed.xml'>Subscribe</a>
+</div>
+<span class='nav-cover'></span>
+
+<div class='site-wrapper'>
+<header class='main-header no-cover post-head'>
+<nav class='main-nav clearfix'>
+<a class='blog-logo post-logo' href='/'>
+<img alt="Neuvians Innovation Inc." src="/images/leaf.png" />
+</a>
+</nav>
+</header>
+<main class='content' role='main'>
+<article class='post'>
+<header class='post-header'>
+<h1 class='post-title'>Using WKHTMLTOPDF in Phoenix as a Plug</h1>
+<section class='post-meta'>
+<time class='post-date' datetime='2016-02-18'>
+18 February 2016
+</time>
+on <a href='/tag/elixir/'>Elixir</a>, <a href='/tag/phoenix/'>Phoenix</a>, <a href='/tag/pdf/'>PDF</a>
+</section>
+</header>
+<section class='post-content'><p>One really nice feature in the Rails world is the use of middleware to intercept
+requests and transform the output. This also exists in Elixir / Phoenix with the
+use of <code>Plug</code>.</p>
+
+<p>Anybody familiar with the <code>PDFKit</code> gem in Rails may have used the middleware that
+automatically generates a PDF of a website if the route ends in <code>.pdf</code>. This was
+pleasantly simple in Elixir as the below code shows:</p>
+
+<p><strong>WARNING</strong>: This method may leak your cookie data
+to a system log. If you are not confident that your environment is secure, I would recommend
+looking for another solution.</p>
+<pre class="highlight plaintext"><code>defmodule Sample.PdfPlug do
+  import Plug.Conn
+  import Plug.Upload
+
+  @wkhtmltopdf_path System.find_executable("wkhtmltopdf")
+
+  def init(opts) do
+    opts
+  end
+
+  def call(conn, opts) do
+    case Regex.match?(~r/.*(pdf)$/, conn.request_path) do
+      true -&gt; generate_pdf(conn, opts)
+      false -&gt; conn
+    end
+  end
+
+  defp generate_pdf(conn, opts) do
+    url = "#{conn.scheme}://#{conn.host}:#{conn.port}#{conn.request_path}"
+    {:ok, file} = random_file("test")
+    conn = fetch_cookies(conn)
+    args = ["-q"] ++ join_cookies(conn.req_cookies) ++ join_options(opts) ++ [String.replace(url, ".pdf", ""), file]
+    System.cmd(@wkhtmltopdf_path, args)
+    conn
+      |&gt; send_file(200, file)
+      |&gt; halt
+  end
+
+  defp join_cookies(cookies) when cookies == %{}, do: []
+  defp join_cookies(cookies) do
+    cookies
+      |&gt; Enum.map(fn{k,v} -&gt; ["--cookie", "#{k}", "#{URI.encode(v)}"] end)
+      |&gt; List.flatten
+  end
+
+  defp join_options(options) do
+    options
+      |&gt; Enum.map(fn{k,v} -&gt; ["--#{k}", "#{v}"] end)
+      |&gt; List.flatten
+  end
+end
+</code></pre>
+
+<p>Let us break down each function:</p>
+
+<ul>
+<li><p><code>init/1</code> takes the options passed to the plug and is required by the <code>Plug</code>
+interface</p></li>
+<li><p><code>call/2</code> handles the connection and any options that are passed. It also returns
+the connection <code>conn</code>. The main task here is to check if a <code>request_path</code> ends in
+<code>.pdf</code>. If this is true if calls <code>generate_pdf/2</code> otherwise it just passes the <code>conn</code>
+to the next plug in the pipeline.</p></li>
+<li><p><code>generate_pdf/2</code> takes the connection and handles WKHTMLTOPDF specific options.
+First it reconstructions the entire URL that is to be turned into a PDF. Next it
+create a random temporary file that will be used to store the created PDF before it
+gets sent to the client. Following that we need to make sure our <code>conn</code> contains all
+the cookie information that is part of the request. This will allow us to use any type
+of user authentication that is required. <code>conn.req_cookies</code> is a <code>Map</code> that needs to
+be flattened so it can be passed as part a command line parameter. The same applies to the
+WKHTMLTOPDF options passed to the plug. As the last part of our command line we include the
+URL to get and the file to put the resulting PDF into. Lastly we execute the command,
+return the content of the file and halt the <code>conn</code>.</p></li>
+<li><p><code>join_cookies/1</code> flattens a <code>conn.req_cookies</code> map and prefixes it with the the correct
+command line prefix: <code>--cookie</code></p></li>
+<li><p><code>join_options/1</code> flattens the <code>options</code> passed to the plug and prefixes it with the the correct
+command line prefix provided by the key of the <code>options</code> map. Ex: <code>--orientation &#39;landscape&#39;</code></p></li>
+</ul>
+
+<p>The last thing that needs to be done is a specific <code>.pdf</code> ending route defined in <code>router.ex</code> and add in a plug:</p>
+<pre class="highlight plaintext"><code>pipeline :browser do
+  plug :accepts, ["html"]
+  plug :fetch_session
+  plug :fetch_flash
+  plug :protect_from_forgery
+  plug :put_secure_browser_headers
+  plug Sample.PdfPlug, orientation: 'landscape'
+end
+
+scope "/", Sample do
+  pipe_through :browser
+  ...
+  get "/reports.pdf", ReportController, :index, as: "print"
+end
+
+</code></pre>
+
+<h4>Why is this particularly awesome</h4>
+
+<p>If you used <code>PDFKit</code> in the WEBrick or Unicorn days of Rails you probably sat down
+and waited &hellip; and waited &hellip; and waited until your request to generate the PDF timed
+out. That was because WEBrick and Unicorn (if not properly configured), where single
+threaded. That means because the client was requesting the PDF, WKHTMLTOPDF was blocked
+from requesting the page to render to PDF. With Elixir/Phoenix the default web server
+<code>cowboy</code> is multithreaded out of box, so this was not worth even thinking about. </p>
+</section>
+<footer class='post-footer'>
+<figure class='author-image'>
+<a class='img' href='/author/max-neuvians/' style='background-image: url(https://www.gravatar.com/avatar/8b8b2f3881b25d0c7506dd5738c3be50?size=68)'>
+<span class='hidden'>Max Neuvians's Picture</span>
+</a>
+</figure>
+<section class='author'>
+<h4>
+<a href='/author/max-neuvians/'>Max Neuvians</a>
+</h4>
+<p></p>
+Read
+<a href='/author/max-neuvians/'>more posts</a>
+by this author.
+<div class='author-meta'>
+<span class='author-location icon-location'>Ottawa, ON, Canada</span>
+<span class='author-link icon-link'>
+<a href='http://neuvians.io'>http://neuvians.io</a>
+</span>
+</div>
+</section>
+<section class='share'>
+<h4>Share this post</h4>
+<a class='icon-twitter' href='https://twitter.com/intent/tweet?text=Using WKHTMLTOPDF in Phoenix as a Plug&amp;amp;url=http://www.neuvians.io/2016/02/18/wkhtmltopdf-elixir-plug-for-phoenix/' onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+<span class='hidden'>Twitter</span>
+</a>
+<a class='icon-facebook' href='https://www.facebook.com/sharer/sharer.php?u=http://www.neuvians.io/2016/02/18/wkhtmltopdf-elixir-plug-for-phoenix/' onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+<span class='hidden'>Facebook</span>
+</a>
+<a class='icon-google-plus' href='https://plus.google.com/share?url=http://www.neuvians.io/2016/02/18/wkhtmltopdf-elixir-plug-for-phoenix/' onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+<span class='hidden'>Google+</span>
+</a>
+</section>
+</footer>
+</article>
+</main>
+<aside class='read-next'>
+<a class='no-cover read-next-story' href='/2016/02/16/simple-phoenix-app-part-5/'>
+<section class='post'>
+<h2>Coin-toss.org / Simple Phoenix application - Part 5</h2>
+<p>Summary The purpose of this post is to document the creation process of the Coin-toss.org website using the Phoenix&hellip;</p>
+</section>
+</a>
+</aside>
+
+<footer class='site-footer clearfix'>
+<section class='copyright'>
+<a href='/'>Neuvians Innovation Inc.</a>
+&copy;
+2016
+</section>
+<section class='poweredby'>
+Casper theme powered by
+<a href='https://ghost.org'>Ghost | Modified by Neuvians.io</a>
+</section>
+</footer>
+</div>
+<script src="/javascripts/application.js"></script>
+<script type='text/javascript'>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-67730011-1', 'auto');
+ga('send', 'pageview');
+</script>
+</body>
+</html>

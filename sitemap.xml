@@ -31,32 +31,44 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>http://www.neuvians.io/2016/02/18/wkhtmltopdf-elixir-plug-for-phoenix/index.html</loc>
+    <lastmod>2016-02-18T11:34:17-05:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>http://www.neuvians.io/googlef4c09d3e70c6969f/index.html</loc>
-    <lastmod>2016-02-16T10:42:09-05:00</lastmod>
+    <lastmod>2016-02-18T11:38:56-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/index.html</loc>
-    <lastmod>2016-02-16T10:42:09-05:00</lastmod>
+    <lastmod>2016-02-18T11:38:56-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/author/max-neuvians/index.html</loc>
-    <lastmod>2016-02-16T10:42:09-05:00</lastmod>
+    <lastmod>2016-02-18T11:38:56-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/tag/elixir/index.html</loc>
-    <lastmod>2016-02-16T10:42:09-05:00</lastmod>
+    <lastmod>2016-02-18T11:38:56-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/tag/phoenix/index.html</loc>
-    <lastmod>2016-02-16T10:42:09-05:00</lastmod>
+    <lastmod>2016-02-18T11:38:56-05:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>http://www.neuvians.io/tag/pdf/index.html</loc>
+    <lastmod>2016-02-18T11:38:56-05:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

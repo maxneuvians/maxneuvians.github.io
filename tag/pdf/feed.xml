@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Neuvians Innovation Inc.: PDF</title>
+  <subtitle>Posts tagged with PDF</subtitle>
+  <id>http://www.neuvians.io</id>
+  <link href="http://www.neuvians.io"/>
+  <link href="http://www.neuvians.io/tag/pdf/feed.xml" rel="self"/>
+  <updated>2016-02-17T19:00:00-05:00</updated>
+  <author>
+    <name>Max Neuvians</name>
+  </author>
+  <entry>
+    <title>Using WKHTMLTOPDF in Phoenix as a Plug</title>
+    <link rel="alternate" href="http://www.neuvians.io/2016/02/18/wkhtmltopdf-elixir-plug-for-phoenix/"/>
+    <id>http://www.neuvians.io/2016/02/18/wkhtmltopdf-elixir-plug-for-phoenix/</id>
+    <published>2016-02-17T19:00:00-05:00</published>
+    <updated>2016-02-18T11:34:17-05:00</updated>
+    <author>
+      <name>Max Neuvians</name>
+    </author>
+    <summary type="html">One really nice feature in the Rails world is the use of middleware to intercept
+requests and transform the output. This also exists in Elixir / Phoenix with the
+use of Plug.
+
+Anybody familiar with the</summary>
+  </entry>
+</feed>
