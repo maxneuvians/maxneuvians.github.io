@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Neuvians Innovation Inc.: Exometer Report via Phoenix Channels</title>
+<meta content='LIVE DEMO: https://exometer-phoenix-channel-demo.herokuapp.com/ Exometer is an incredibly robust package for Erlang to monitor system performanc...' name='description'>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1.0' name='viewport'>
+<meta content='IE=edge' http-equiv='X-UA-Compatible'>
+<meta content='True' name='HandheldFriendly'>
+<meta content='Neuvians Innovation Inc.' property='og:site_name'>
+<meta content='article' property='og:type'>
+<meta content='Exometer Report via Phoenix Channels' property='og:title'>
+<meta content='LIVE DEMO: https://exometer-phoenix-channel-demo.herokuapp.com/ Exometer is an incredibly robust package for Erlang to monitor system performanc...' property='og:description'>
+<meta content='http://www.neuvians.io/2016/02/26/exometer-report-via-phoenix-channels/' property='og:url'>
+<meta content='2016-02-26' property='article:published_time'>
+<meta content='summary' name='twitter:card'>
+<meta content='maxneuvians' name='twitter:site'>
+<meta content='Exometer Report via Phoenix Channels' name='twitter:title'>
+<meta content='LIVE DEMO: https://exometer-phoenix-channel-demo.herokuapp.com/ Exometer is an incredibly robust package for Erlang to monitor system performanc...' name='twitter:description'>
+<meta content='http://www.neuvians.io/2016/02/26/exometer-report-via-phoenix-channels/' name='twitter:url'>
+<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+<link href="/images/images/favicon.ico" rel="icon" type="image/ico" />
+<link href="/stylesheets/application.css" rel="stylesheet" />
+<link href='//fonts.googleapis.com/css?family=Open+Sans:700,400' rel='stylesheet' type='text/css'>
+</head>
+<body class='post-template nav-closed'>
+<div class='nav'>
+<h3 class='nav-title'>Menu</h3>
+<a class='nav-close' href='#'>
+<span class='hidden'>Close</span>
+</a>
+<ul>
+<li class='nav-home' role='presentation'>
+<a href='/'>Home</a>
+</li>
+</ul>
+<a class='subscribe-button icon-feed' href='/feed.xml'>Subscribe</a>
+</div>
+<span class='nav-cover'></span>
+
+<div class='site-wrapper'>
+<header class='main-header no-cover post-head'>
+<nav class='main-nav clearfix'>
+<a class='blog-logo post-logo' href='/'>
+<img alt="Neuvians Innovation Inc." src="/images/leaf.png" />
+</a>
+</nav>
+</header>
+<main class='content' role='main'>
+<article class='post'>
+<header class='post-header'>
+<h1 class='post-title'>Exometer Report via Phoenix Channels</h1>
+<section class='post-meta'>
+<time class='post-date' datetime='2016-02-26'>
+26 February 2016
+</time>
+on <a href='/tag/elixir/'>Elixir</a>, <a href='/tag/phoenix/'>Phoenix</a>, <a href='/tag/exometer/'>Exometer</a>
+</section>
+</header>
+<section class='post-content'><p><a rel="nofollow" href="https://exometer-phoenix-channel-demo.herokuapp.com/">LIVE DEMO: https://exometer-phoenix-channel-demo.herokuapp.com/</a></p>
+
+<p><a rel="nofollow" href="https://github.com/Feuerlabs/exometer_core">Exometer</a> is an incredibly robust
+package for Erlang to monitor system performance as well as any other type of
+events one might be interested in (database queries, actions per second, etc).
+It integrates easily with external statistic collection services such as Graphite
+through a reporter functionality. By default it includes reporters that send data
+to <code>StatsD</code>, <code>AMQP messages</code> and other common interfaces.</p>
+
+<p>In this article I will create a custom <code>Exometer</code>
+reporter module that will send the data through a <code>Phoenix.Channel</code>.</p>
+
+<h3>Exometer Report interface</h3>
+
+<p>The first thing I needed to do was look at the functions that <code>Exometer</code> expects
+from its reporters. Looking at a simple <a rel="nofollow" href="https://github.com/Feuerlabs/exometer_core/blob/master/src/exometer_report_tty.erl">tty report implementation</a> that is
+included in the <code>Exometer</code> library, we can see that there are two essential function
+calls <code>exometer_init/1</code> and <code>exometer_report/5</code>, which we need to implement in any
+custom library. I also included the other functions and modeled them after the mostly
+benign behavior shown in the example reporter:</p>
+<pre class="highlight plaintext"><code>defmodule ExometerReportPhoenixChannel do
+  @behaviour :exometer_report
+
+  # Initializes the exometer_report with passed params
+  # Requires :channel and :app_name options
+  def exometer_init(opts) do
+    {:ok, opts}
+  end
+
+  # Converts the data passed by Exometer and relays it to the channel
+  def exometer_report(metric, data_point, extra, value, opts) do
+    id = opts[:channel] &lt;&gt; ":" &lt;&gt; name(metric, data_point)
+
+    payload = %{
+      value: value,
+      extra: extra,
+      timestamp: :os.system_time(:milli_seconds)
+    }
+
+    Module.concat([opts[:app_name], Endpoint])
+    |&gt; apply(:broadcast, [id, "change", payload])
+
+    {:ok, opts}
+  end
+
+  # Public function that should be implemented according to
+  # https://github.com/Feuerlabs/exometer_core/blob/master/src/exometer_report_tty.erl
+  def exometer_call(_, _, opts), do: {:ok, opts}
+  def exometer_cast(_, opts), do: {:ok, opts}
+  def exometer_info(_, opts), do: {:ok, opts}
+  def exometer_newentry(_, opts), do: {:ok, opts}
+  def exometer_setopts(_, _, _, opts), do: {:ok, opts}
+  def exometer_terminate(_, _), do: nil
+
+  defp name(metric, data_point) do
+    Enum.join(metric, "_") &lt;&gt; "_" &lt;&gt; "#{data_point}"
+  end
+end
+</code></pre>
+
+<p><code>exometer_init/1</code> takes a map of options that need to be defined when you initialize
+<code>Exometer</code> and define your statistics as well as the reporters and subscribers. To keep the
+reporter as generic as possible I though it made sense to specify the name of the channel
+you want to send the stats to. Also the reporter should not be tied to any specific application
+and as such you should also specify an <code>app_name</code> in the configuration.</p>
+
+<p><code>exometer_report/5</code> takes the <code>name</code> of the metric, the specific <code>data_point</code>, some <code>extra</code>
+content I am still not sure about, the actual <code>value</code>, and the <code>opts</code> map specified during
+<code>exometer_init/1</code>. Next it concatenates the specified <code>:channel</code> name with the name of the <code>data_point</code>
+and <code>metric</code> to form a <code>channel:topic</code> that can be used in Phoenix channels. Following that it creates
+a <code>payload</code> map that includes the value of the metric, whatever might be in <code>extra</code> and a timestamp.
+Finally it uses the specified <code>:app_name</code> and sends the <code>Endpoint</code> module the <code>broadcast/3</code> function which will
+send a &ldquo;change&rdquo; event to all subscribers connected to the <code>id</code> channel. The <code>payload</code> gets automatically
+converted into JSON.</p>
+
+<h3>Loading the reporter</h3>
+
+<p>As mentioned earlier <code>Exometer</code> is an Erlang package and when you configure it, it expects Erlang
+conventions. We, however, have built an Elixit module: <code>defmodule ExometerReportPhoenixChannel</code>. So how will
+an Erlang application load an Elixir module? It does not need to as all Elixir just gets turned into Erlang
+and prefixed with <code>Elixir.</code> namespace. This means that if you need to reference an Elixir function from Erlang,
+you just need to apply that prefix. Here is my <code>ecometer_config.exs</code> in which I use this:</p>
+<pre class="highlight plaintext"><code>polling_interval = 1_000
+memory_stats     = ~w(atom binary ets processes total)a
+
+config :exometer,
+  predefined:
+    [
+      {
+        ~w(erlang memory)a,
+        {:function, :erlang, :memory, [], :proplist, memory_stats},
+        []
+      },
+      {
+        ~w(erlang statistics)a,
+        {:function, :erlang, :statistics, [:'$dp'], :value, [:run_queue]},
+        []
+      },
+    ],
+  reporters:
+    [
+      "Elixir.ExometerReportPhoenixChannel": [
+        app_name: "ExometerPhoenixChannelDemo",
+        channel: "stats"
+      ],
+    ],
+  report: [
+    subscribers:
+      [
+        {
+          :"Elixir.ExometerReportPhoenixChannel",
+          [:erlang, :memory], memory_stats, polling_interval, true
+        },
+        {
+          :"Elixir.ExometerReportPhoenixChannel",
+          [:erlang, :statistics], :run_queue, polling_interval, true
+        }
+      ]
+  ]
+</code></pre>
+
+<p>Note the <code>:&quot;Elixir.ExometerReportPhoenixChannel&quot;</code>. You can also see that I have
+  declared my <code>app_name</code> and <code>channel</code>.</p>
+
+<h3>Visualizing the data</h3>
+
+<p>To graph the data I used the excellent HighCharts library. All I needed to do was
+hook up the channels so that any incoming data would be automatically included:</p>
+<pre class="highlight plaintext"><code>import {Socket} from "deps/phoenix/web/static/js/phoenix"
+
+let socket = new Socket("/socket", {params: {token: window.userToken}})
+
+socket.connect()
+
+String.prototype.capitalize = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
+
+$(function () {
+  let chart = new Highcharts.Chart({
+
+    chart: {
+        renderTo: 'container',
+        defaultSeriesType: 'spline'
+    },
+    title: {
+        text: 'Erlang Memory'
+    },
+    subtitle: {
+        text: "Click on label to show/hide series"
+    },
+    xAxis: {
+        type: 'datetime',
+        tickPixelInterval: 150,
+        maxZoom: 20 * 1000
+    },
+    yAxis: {
+        minPadding: 0.2,
+        maxPadding: 0.2,
+        title: {
+            text: 'Bytes',
+            margin: 80
+        }
+    }
+  });
+
+  let chart_1 = new Highcharts.Chart({
+
+    chart: {
+        renderTo: 'container_1',
+        defaultSeriesType: 'spline'
+    },
+    title: {
+        text: 'Erlang Run queue'
+    },
+    xAxis: {
+        type: 'datetime',
+        tickPixelInterval: 150,
+        maxZoom: 20 * 1000
+    },
+    yAxis: {
+        minPadding: 0.2,
+        maxPadding: 0.2,
+        title: {
+            text: 'Processes',
+            margin: 80
+        }
+    }
+  });
+
+  function join_channel(name, target_chart){
+    var channel = socket.channel(name, {})
+    channel.join()
+      .receive("ok", data =&gt; {
+        console.log("Joined channel", name)
+      })
+      .receive("error", resp =&gt; {
+        console.log("Unable to join topic", name)
+      })
+
+    channel.on("change", stat =&gt; {
+      var series = target_chart.get(name)
+      var shift = series.data.length &gt; 15
+      var point = [stat.timestamp, stat.value]
+      series.addPoint(point, true, shift);
+    })
+  }
+
+  var topics = ["atom", "binary", "ets", "processes", "total"]
+
+  for(var t of topics){
+    var topic = "stats:erlang_memory_" + t
+    chart.addSeries({id: topic, name: t.capitalize()})
+    join_channel(topic, chart)
+  }
+
+  var topic = "stats:erlang_statistics_run_queue"
+  chart_1.addSeries({id: topic, name: "Run queue"})
+  join_channel(topic, chart_1)
+
+});
+</code></pre>
+
+<h3>Conclusion</h3>
+
+<p>You can find a live version of the site <a rel="nofollow" href="https://exometer-phoenix-channel-demo.herokuapp.com/">here</a> and the source code <a rel="nofollow" href="https://github.com/maxneuvians/exometer_phoenix_channel_demo">here</a></p>
+</section>
+<footer class='post-footer'>
+<figure class='author-image'>
+<a class='img' href='/author/max-neuvians/' style='background-image: url(https://www.gravatar.com/avatar/8b8b2f3881b25d0c7506dd5738c3be50?size=68)'>
+<span class='hidden'>Max Neuvians's Picture</span>
+</a>
+</figure>
+<section class='author'>
+<h4>
+<a href='/author/max-neuvians/'>Max Neuvians</a>
+</h4>
+<p></p>
+Read
+<a href='/author/max-neuvians/'>more posts</a>
+by this author.
+<div class='author-meta'>
+<span class='author-location icon-location'>Ottawa, ON, Canada</span>
+<span class='author-link icon-link'>
+<a href='http://neuvians.io'>http://neuvians.io</a>
+</span>
+</div>
+</section>
+<section class='share'>
+<h4>Share this post</h4>
+<a class='icon-twitter' href='https://twitter.com/intent/tweet?text=Exometer Report via Phoenix Channels&amp;amp;url=http://www.neuvians.io/2016/02/26/exometer-report-via-phoenix-channels/' onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+<span class='hidden'>Twitter</span>
+</a>
+<a class='icon-facebook' href='https://www.facebook.com/sharer/sharer.php?u=http://www.neuvians.io/2016/02/26/exometer-report-via-phoenix-channels/' onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+<span class='hidden'>Facebook</span>
+</a>
+<a class='icon-google-plus' href='https://plus.google.com/share?url=http://www.neuvians.io/2016/02/26/exometer-report-via-phoenix-channels/' onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+<span class='hidden'>Google+</span>
+</a>
+</section>
+</footer>
+</article>
+</main>
+<aside class='read-next'>
+<a class='no-cover read-next-story' href='/2016/02/18/wkhtmltopdf-elixir-plug-for-phoenix/'>
+<section class='post'>
+<h2>Using WKHTMLTOPDF in Phoenix as a Plug</h2>
+<p>One really nice feature in the Rails world is the use of middleware to intercept requests and transform the&hellip;</p>
+</section>
+</a>
+</aside>
+
+<footer class='site-footer clearfix'>
+<section class='copyright'>
+<a href='/'>Neuvians Innovation Inc.</a>
+&copy;
+2016
+</section>
+<section class='poweredby'>
+Casper theme powered by
+<a href='https://ghost.org'>Ghost | Modified by Neuvians.io</a>
+</section>
+</footer>
+</div>
+<script src="/javascripts/application.js"></script>
+<script type='text/javascript'>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-67730011-1', 'auto');
+ga('send', 'pageview');
+</script>
+</body>
+</html>

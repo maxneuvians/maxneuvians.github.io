@@ -5,10 +5,25 @@
   <id>http://www.neuvians.io</id>
   <link href="http://www.neuvians.io"/>
   <link href="http://www.neuvians.io/feed.xml" rel="self"/>
-  <updated>2016-02-17T19:00:00-05:00</updated>
+  <updated>2016-02-25T19:00:00-05:00</updated>
   <author>
     <name>Max Neuvians</name>
   </author>
+  <entry>
+    <title>Exometer Report via Phoenix Channels</title>
+    <link rel="alternate" href="http://www.neuvians.io/2016/02/26/exometer-report-via-phoenix-channels/"/>
+    <id>http://www.neuvians.io/2016/02/26/exometer-report-via-phoenix-channels/</id>
+    <published>2016-02-25T19:00:00-05:00</published>
+    <updated>2016-02-26T13:44:52-05:00</updated>
+    <author>
+      <name>Max Neuvians</name>
+    </author>
+    <summary type="html">LIVE DEMO: https://exometer-phoenix-channel-demo.herokuapp.com/
+
+Exometer is an incredibly robust
+package for Erlang to monitor system performance as well as any other type of
+events one might be interested</summary>
+  </entry>
   <entry>
     <title>Using WKHTMLTOPDF in Phoenix as a Plug</title>
     <link rel="alternate" href="http://www.neuvians.io/2016/02/18/wkhtmltopdf-elixir-plug-for-phoenix/"/>
@@ -86,22 +101,6 @@ include</summary>
 The purpose of this post is to document the creation process of
 the Coin-toss.org website using the Phoenix Web
 application framework and the Elixir programming languages. Part 2 steps
-include</summary>
-  </entry>
-  <entry>
-    <title>Coin-toss.org / Simple Phoenix application - Part 1</title>
-    <link rel="alternate" href="http://www.neuvians.io/2016/02/09/simple-phoenix-app-part-1/"/>
-    <id>http://www.neuvians.io/2016/02/09/simple-phoenix-app-part-1/</id>
-    <published>2016-02-08T19:00:00-05:00</published>
-    <updated>2016-02-12T11:09:14-05:00</updated>
-    <author>
-      <name>Max Neuvians</name>
-    </author>
-    <summary type="html">Summary
-
-The purpose of this post is to document the creation process of
-the Coin-toss.org website using the Phoenix Web
-application framework and the Elixir programming languages. Part 1 steps
 include</summary>
   </entry>
 </feed>

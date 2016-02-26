@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Neuvians Innovation Inc.: Exometer</title>
+  <subtitle>Posts tagged with Exometer</subtitle>
+  <id>http://www.neuvians.io</id>
+  <link href="http://www.neuvians.io"/>
+  <link href="http://www.neuvians.io/tag/exometer/feed.xml" rel="self"/>
+  <updated>2016-02-25T19:00:00-05:00</updated>
+  <author>
+    <name>Max Neuvians</name>
+  </author>
+  <entry>
+    <title>Exometer Report via Phoenix Channels</title>
+    <link rel="alternate" href="http://www.neuvians.io/2016/02/26/exometer-report-via-phoenix-channels/"/>
+    <id>http://www.neuvians.io/2016/02/26/exometer-report-via-phoenix-channels/</id>
+    <published>2016-02-25T19:00:00-05:00</published>
+    <updated>2016-02-26T13:44:52-05:00</updated>
+    <author>
+      <name>Max Neuvians</name>
+    </author>
+    <summary type="html">LIVE DEMO: https://exometer-phoenix-channel-demo.herokuapp.com/
+
+Exometer is an incredibly robust
+package for Erlang to monitor system performance as well as any other type of
+events one might be interested</summary>
+  </entry>
+</feed>
