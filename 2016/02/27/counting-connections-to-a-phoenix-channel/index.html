@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Neuvians.IO: Counting connections to a Phoenix Channel</title>
+<meta content='I was unable to find a quick Google answer to this question, so I thought I should post the &amp;ldquo;dirty&amp;rdquo; solution I found: Realistically ...' name='description'>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1.0' name='viewport'>
+<meta content='IE=edge' http-equiv='X-UA-Compatible'>
+<meta content='True' name='HandheldFriendly'>
+<meta content='Neuvians.IO' property='og:site_name'>
+<meta content='article' property='og:type'>
+<meta content='Counting connections to a Phoenix Channel' property='og:title'>
+<meta content='I was unable to find a quick Google answer to this question, so I thought I should post the &amp;ldquo;dirty&amp;rdquo; solution I found: Realistically ...' property='og:description'>
+<meta content='http://www.neuvians.io/2016/02/27/counting-connections-to-a-phoenix-channel/' property='og:url'>
+<meta content='2016-02-27' property='article:published_time'>
+<meta content='summary' name='twitter:card'>
+<meta content='maxneuvians' name='twitter:site'>
+<meta content='Counting connections to a Phoenix Channel' name='twitter:title'>
+<meta content='I was unable to find a quick Google answer to this question, so I thought I should post the &amp;ldquo;dirty&amp;rdquo; solution I found: Realistically ...' name='twitter:description'>
+<meta content='http://www.neuvians.io/2016/02/27/counting-connections-to-a-phoenix-channel/' name='twitter:url'>
+<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+<link href="/images/images/favicon.ico" rel="icon" type="image/ico" />
+<link href="/stylesheets/application.css" rel="stylesheet" />
+<link href='//fonts.googleapis.com/css?family=Open+Sans:700,400' rel='stylesheet' type='text/css'>
+</head>
+<body class='post-template nav-closed'>
+<div class='nav'>
+<h3 class='nav-title'>Menu</h3>
+<a class='nav-close' href='#'>
+<span class='hidden'>Close</span>
+</a>
+<ul>
+<li class='nav-home' role='presentation'>
+<a href='/'>Home</a>
+</li>
+</ul>
+<a class='subscribe-button icon-feed' href='/feed.xml'>Subscribe</a>
+</div>
+<span class='nav-cover'></span>
+
+<div class='site-wrapper'>
+<header class='main-header no-cover post-head'>
+<nav class='main-nav clearfix'>
+<a class='blog-logo post-logo' href='/'>
+<img alt="Neuvians.IO" src="/images/leaf.png" />
+</a>
+</nav>
+</header>
+<main class='content' role='main'>
+<article class='post'>
+<header class='post-header'>
+<h1 class='post-title'>Counting connections to a Phoenix Channel</h1>
+<section class='post-meta'>
+<time class='post-date' datetime='2016-02-27'>
+27 February 2016
+</time>
+on <a href='/tag/elixir/'>Elixir</a>, <a href='/tag/phoenix/'>Phoenix</a>, <a href='/tag/exometer/'>Exometer</a>
+</section>
+</header>
+<section class='post-content'><p>I was unable to find a quick Google answer to this question, so I thought I
+should post the &ldquo;dirty&rdquo; solution I found:</p>
+
+<p>Realistically you can only count the subscribers to your local node unless
+there is some clever way for connected nodes to return their subscriber count,
+which I have not come across (This might be useless anyways as subscribers may
+have left by the time you get the count back). By default Phoenix stores the <code>PID</code>s of any
+subscribers inside an <code>ets</code> table (I believe you can also use Redis). As a result
+we can just query the <code>ets</code> table directly. The naming convention for the table is
+<code>APP_NAME.PubSub.Local0</code>.</p>
+
+<p>Ex:</p>
+
+<p><code>:ets.info(ExometerPhoenixChannelDemo.PubSub.Local0)</code></p>
+
+<p>returns</p>
+<pre class="highlight plaintext"><code>[read_concurrency: true, write_concurrency: true, compressed: false,
+ memory: 1603, owner: #PID&lt;0.285.0&gt;, heir: :none,
+ name: ExometerPhoenixChannelDemo.PubSub.Local0, size: 14, node: :nonode@nohost,
+ named_table: true, type: :duplicate_bag, keypos: 1, protection: :public]
+</code></pre>
+
+<p>All you would need to do then is extract the <code>size</code> key to get a total.</p>
+
+<p>More useful would be get the count of connections per Phoenix topic - this you
+can do with another <code>ets</code> function <code>ets.foldl/3</code> which you need to pass a function.
+Here is an example function that will count all the subscribers per topic:</p>
+<pre class="highlight plaintext"><code>def count do
+  acc = fn {channel, _}, map -&gt; Map.update(map, channel, 1, &amp;(&amp;1 + 1)) end
+  :ets.foldl(acc, %{}, ExometerPhoenixChannelDemo.PubSub.Local0)
+end
+</code></pre>
+
+<p>This returns something akin to:</p>
+<pre class="highlight plaintext"><code>%{"phoenix:live_reload" =&gt; 2, "stats:erlang_memory_atom" =&gt; 2,
+  "stats:erlang_memory_binary" =&gt; 2, "stats:erlang_memory_ets" =&gt; 2,
+  "stats:erlang_memory_processes" =&gt; 2, "stats:erlang_memory_total" =&gt; 2,
+  "stats:socket_connections_count" =&gt; 2}
+</code></pre>
+
+<p>You can see that I have two browsers open with a connection to each topic.</p>
+
+<p><strong>Please note:</strong> Cowboy times out web socket connections after 30 seconds if they
+no longer respond, so statistics are inaccurate for 30 seconds at a time.</p>
+</section>
+<footer class='post-footer'>
+<figure class='author-image'>
+<a class='img' href='/author/max-neuvians/' style='background-image: url(https://www.gravatar.com/avatar/8b8b2f3881b25d0c7506dd5738c3be50?size=68)'>
+<span class='hidden'>Max Neuvians's Picture</span>
+</a>
+</figure>
+<section class='author'>
+<h4>
+<a href='/author/max-neuvians/'>Max Neuvians</a>
+</h4>
+<p></p>
+Read
+<a href='/author/max-neuvians/'>more posts</a>
+by this author.
+<div class='author-meta'>
+<span class='author-location icon-location'>Ottawa, ON, Canada</span>
+<span class='author-link icon-link'>
+<a href='http://neuvians.io'>http://neuvians.io</a>
+</span>
+</div>
+</section>
+<section class='share'>
+<h4>Share this post</h4>
+<a class='icon-twitter' href='https://twitter.com/intent/tweet?text=Counting connections to a Phoenix Channel&amp;amp;url=http://www.neuvians.io/2016/02/27/counting-connections-to-a-phoenix-channel/' onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+<span class='hidden'>Twitter</span>
+</a>
+<a class='icon-facebook' href='https://www.facebook.com/sharer/sharer.php?u=http://www.neuvians.io/2016/02/27/counting-connections-to-a-phoenix-channel/' onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+<span class='hidden'>Facebook</span>
+</a>
+<a class='icon-google-plus' href='https://plus.google.com/share?url=http://www.neuvians.io/2016/02/27/counting-connections-to-a-phoenix-channel/' onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+<span class='hidden'>Google+</span>
+</a>
+</section>
+</footer>
+</article>
+</main>
+<aside class='read-next'>
+<a class='no-cover read-next-story' href='/2016/02/26/exometer-report-via-phoenix-channels/'>
+<section class='post'>
+<h2>Exometer Report via Phoenix Channels</h2>
+<p>LIVE DEMO: https://exometer-phoenix-channel-demo.herokuapp.com/ Exometer is an incredibly robust package for Erlang to monitor system performance as well as any&hellip;</p>
+</section>
+</a>
+</aside>
+
+<footer class='site-footer clearfix'>
+<section class='copyright'>
+<a href='/'>Neuvians.IO</a>
+&copy;
+2016
+</section>
+<section class='poweredby'>
+Casper theme powered by
+<a href='https://ghost.org'>Ghost | Modified by Neuvians.io</a>
+</section>
+</footer>
+</div>
+<script src="/javascripts/application.js"></script>
+<script type='text/javascript'>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-67730011-1', 'auto');
+ga('send', 'pageview');
+</script>
+</body>
+</html>
