@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Neuvians.IO: Generating a SSH key pair in Elixir</title>
+<meta content='Below is some boiler plate code to create and manage SSH keys inside a Phoenix application. The keys should be in your priv/static directory so ...' name='description'>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1.0' name='viewport'>
+<meta content='IE=edge' http-equiv='X-UA-Compatible'>
+<meta content='True' name='HandheldFriendly'>
+<meta content='Neuvians.IO' property='og:site_name'>
+<meta content='article' property='og:type'>
+<meta content='Generating a SSH key pair in Elixir' property='og:title'>
+<meta content='Below is some boiler plate code to create and manage SSH keys inside a Phoenix application. The keys should be in your priv/static directory so ...' property='og:description'>
+<meta content='http://www.neuvians.io/2016/03/03/generating-a-ssh-key-pair-using-elixir/' property='og:url'>
+<meta content='2016-03-03' property='article:published_time'>
+<meta content='summary' name='twitter:card'>
+<meta content='maxneuvians' name='twitter:site'>
+<meta content='Generating a SSH key pair in Elixir' name='twitter:title'>
+<meta content='Below is some boiler plate code to create and manage SSH keys inside a Phoenix application. The keys should be in your priv/static directory so ...' name='twitter:description'>
+<meta content='http://www.neuvians.io/2016/03/03/generating-a-ssh-key-pair-using-elixir/' name='twitter:url'>
+<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+<link href="/images/images/favicon.ico" rel="icon" type="image/ico" />
+<link href="/stylesheets/application.css" rel="stylesheet" />
+<link href='//fonts.googleapis.com/css?family=Open+Sans:700,400' rel='stylesheet' type='text/css'>
+</head>
+<body class='post-template nav-closed'>
+<div class='nav'>
+<h3 class='nav-title'>Menu</h3>
+<a class='nav-close' href='#'>
+<span class='hidden'>Close</span>
+</a>
+<ul>
+<li class='nav-home' role='presentation'>
+<a href='/'>Home</a>
+</li>
+</ul>
+<a class='subscribe-button icon-feed' href='/feed.xml'>Subscribe</a>
+</div>
+<span class='nav-cover'></span>
+
+<div class='site-wrapper'>
+<header class='main-header no-cover post-head'>
+<nav class='main-nav clearfix'>
+<a class='blog-logo post-logo' href='/'>
+<img alt="Neuvians.IO" src="/images/leaf.png" />
+</a>
+</nav>
+</header>
+<main class='content' role='main'>
+<article class='post'>
+<header class='post-header'>
+<h1 class='post-title'>Generating a SSH key pair in Elixir</h1>
+<section class='post-meta'>
+<time class='post-date' datetime='2016-03-03'>
+03 March 2016
+</time>
+on <a href='/tag/elixir/'>Elixir</a>, <a href='/tag/phoenix/'>Phoenix</a>
+</section>
+</header>
+<section class='post-content'><p>Below is some boiler plate code to create and manage SSH keys inside
+a Phoenix application. The keys should be in your <code>priv/static</code> directory so that
+they get copied to your application code. <code>ssh-keygen</code> is the executable that
+needs to be installed for this process to work.</p>
+<pre class="highlight plaintext"><code>defmodule MyApplication.KeyManager do
+  @moduledoc """
+  Provides functions to manage SSH keys used for MyApplication
+  """
+
+  @ssh_keygen System.find_executable("ssh-keygen")
+  @path Application.app_dir(:my_application, "priv/keys") &lt;&gt; "/"
+  @key @path &lt;&gt; "id_rsa"
+
+  @doc """
+  Generates a new private/public key set by removing the old key and creating
+  a new set. Returns if they keys exist.
+  """
+  def generate_keys do
+    remove_old_keys()
+    create_keys()
+    keys_exist?()
+  end
+
+  @doc """
+  Checks to see if the ssh keys exist
+  """
+  def keys_exist? do
+    File.exists?(@key) &amp;&amp; File.exists?(@key &lt;&gt; ".pub")
+  end
+
+  @doc """
+  Returns the content of the SSH public ket
+  """
+  def public_key do
+    key = File.open!(@key &lt;&gt; ".pub",[:read])
+          |&gt; IO.read(:line)
+          |&gt; String.replace("\n", "")
+    File.close(@key &lt;&gt; ".pub")
+    key
+  end
+
+  defp create_keys do
+    args = ["-t", "rsa", "-b", "4096", "-f", @key, "-C", "MyApplication"]
+    System.cmd(@ssh_keygen, args)
+  end
+
+  defp remove_old_keys do
+    @path
+    |&gt; File.ls!
+    |&gt; Enum.each(&amp;(File.rm! @path &lt;&gt;  &amp;1 ))
+  end
+
+end
+</code></pre>
+</section>
+<footer class='post-footer'>
+<figure class='author-image'>
+<a class='img' href='/author/max-neuvians/' style='background-image: url(https://www.gravatar.com/avatar/8b8b2f3881b25d0c7506dd5738c3be50?size=68)'>
+<span class='hidden'>Max Neuvians's Picture</span>
+</a>
+</figure>
+<section class='author'>
+<h4>
+<a href='/author/max-neuvians/'>Max Neuvians</a>
+</h4>
+<p></p>
+Read
+<a href='/author/max-neuvians/'>more posts</a>
+by this author.
+<div class='author-meta'>
+<span class='author-location icon-location'>Ottawa, ON, Canada</span>
+<span class='author-link icon-link'>
+<a href='http://neuvians.io'>http://neuvians.io</a>
+</span>
+</div>
+</section>
+<section class='share'>
+<h4>Share this post</h4>
+<a class='icon-twitter' href='https://twitter.com/intent/tweet?text=Generating a SSH key pair in Elixir&amp;amp;url=http://www.neuvians.io/2016/03/03/generating-a-ssh-key-pair-using-elixir/' onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+<span class='hidden'>Twitter</span>
+</a>
+<a class='icon-facebook' href='https://www.facebook.com/sharer/sharer.php?u=http://www.neuvians.io/2016/03/03/generating-a-ssh-key-pair-using-elixir/' onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+<span class='hidden'>Facebook</span>
+</a>
+<a class='icon-google-plus' href='https://plus.google.com/share?url=http://www.neuvians.io/2016/03/03/generating-a-ssh-key-pair-using-elixir/' onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+<span class='hidden'>Google+</span>
+</a>
+</section>
+</footer>
+</article>
+</main>
+<aside class='read-next'>
+<a class='no-cover read-next-story' href='/2016/02/27/counting-connections-to-a-phoenix-channel/'>
+<section class='post'>
+<h2>Counting connections to a Phoenix Channel</h2>
+<p>I was unable to find a quick Google answer to this question, so I thought I should post the&hellip;</p>
+</section>
+</a>
+</aside>
+
+<footer class='site-footer clearfix'>
+<section class='copyright'>
+<a href='/'>Neuvians.IO</a>
+&copy;
+2016
+</section>
+<section class='poweredby'>
+Casper theme powered by
+<a href='https://ghost.org'>Ghost | Modified by Neuvians.io</a>
+</section>
+</footer>
+</div>
+<script src="/javascripts/application.js"></script>
+<script type='text/javascript'>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-67730011-1', 'auto');
+ga('send', 'pageview');
+</script>
+</body>
+</html>

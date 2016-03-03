@@ -5,10 +5,23 @@
   <id>http://www.neuvians.io</id>
   <link href="http://www.neuvians.io"/>
   <link href="http://www.neuvians.io/feed.xml" rel="self"/>
-  <updated>2016-02-26T19:00:00-05:00</updated>
+  <updated>2016-03-02T19:00:00-05:00</updated>
   <author>
     <name>Max Neuvians</name>
   </author>
+  <entry>
+    <title>Generating a SSH key pair in Elixir</title>
+    <link rel="alternate" href="http://www.neuvians.io/2016/03/03/generating-a-ssh-key-pair-using-elixir/"/>
+    <id>http://www.neuvians.io/2016/03/03/generating-a-ssh-key-pair-using-elixir/</id>
+    <published>2016-03-02T19:00:00-05:00</published>
+    <updated>2016-03-03T18:40:38-05:00</updated>
+    <author>
+      <name>Max Neuvians</name>
+    </author>
+    <summary type="html">Below is some boiler plate code to create and manage SSH keys inside
+a Phoenix application. The keys should be in your priv/static directory so that
+they get copied to your application code. ssh-keygen</summary>
+  </entry>
   <entry>
     <title>Counting connections to a Phoenix Channel</title>
     <link rel="alternate" href="http://www.neuvians.io/2016/02/27/counting-connections-to-a-phoenix-channel/"/>
@@ -84,22 +97,6 @@ include</summary>
 The purpose of this post is to document the creation process of
 the Coin-toss.org website using the Phoenix Web
 application framework and the Elixir programming languages. Part 4 steps
-include</summary>
-  </entry>
-  <entry>
-    <title>Coin-toss.org / Simple Phoenix application - Part 3</title>
-    <link rel="alternate" href="http://www.neuvians.io/2016/02/11/simple-phoenix-app-part-3/"/>
-    <id>http://www.neuvians.io/2016/02/11/simple-phoenix-app-part-3/</id>
-    <published>2016-02-10T19:00:00-05:00</published>
-    <updated>2016-02-15T13:54:47-05:00</updated>
-    <author>
-      <name>Max Neuvians</name>
-    </author>
-    <summary type="html">Summary
-
-The purpose of this post is to document the creation process of
-the Coin-toss.org website using the Phoenix Web
-application framework and the Elixir programming languages. Part 3 steps
 include</summary>
   </entry>
 </feed>
