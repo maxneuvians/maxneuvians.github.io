@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Neuvians.IO: Using a Phoenix app as a dependency - a start</title>
+<meta content='The purpose of this post is start the process of modifying an existing Phoenix application (a Child) so it can be used by another Phoenix applic...' name='description'>
+<meta charset='utf-8'>
+<meta content='width=device-width, initial-scale=1.0' name='viewport'>
+<meta content='IE=edge' http-equiv='X-UA-Compatible'>
+<meta content='True' name='HandheldFriendly'>
+<meta content='Neuvians.IO' property='og:site_name'>
+<meta content='article' property='og:type'>
+<meta content='Using a Phoenix app as a dependency - a start' property='og:title'>
+<meta content='The purpose of this post is start the process of modifying an existing Phoenix application (a Child) so it can be used by another Phoenix applic...' property='og:description'>
+<meta content='http://www.neuvians.io/2016/03/15/using-a-phoenix-app-as-a-dependency/' property='og:url'>
+<meta content='2016-03-15' property='article:published_time'>
+<meta content='summary' name='twitter:card'>
+<meta content='maxneuvians' name='twitter:site'>
+<meta content='Using a Phoenix app as a dependency - a start' name='twitter:title'>
+<meta content='The purpose of this post is start the process of modifying an existing Phoenix application (a Child) so it can be used by another Phoenix applic...' name='twitter:description'>
+<meta content='http://www.neuvians.io/2016/03/15/using-a-phoenix-app-as-a-dependency/' name='twitter:url'>
+<link rel="alternate" type="application/atom+xml" title="Atom Feed" href="/feed.xml" />
+<link href="/images/images/favicon.ico" rel="icon" type="image/ico" />
+<link href="/stylesheets/application.css" rel="stylesheet" />
+<link href='//fonts.googleapis.com/css?family=Open+Sans:700,400' rel='stylesheet' type='text/css'>
+</head>
+<body class='post-template nav-closed'>
+<div class='nav'>
+<h3 class='nav-title'>Menu</h3>
+<a class='nav-close' href='#'>
+<span class='hidden'>Close</span>
+</a>
+<ul>
+<li class='nav-home' role='presentation'>
+<a href='/'>Home</a>
+</li>
+</ul>
+<a class='subscribe-button icon-feed' href='/feed.xml'>Subscribe</a>
+</div>
+<span class='nav-cover'></span>
+
+<div class='site-wrapper'>
+<header class='main-header no-cover post-head'>
+<nav class='main-nav clearfix'>
+<a class='blog-logo post-logo' href='/'>
+<img alt="Neuvians.IO" src="/images/leaf.png" />
+</a>
+</nav>
+</header>
+<main class='content' role='main'>
+<article class='post'>
+<header class='post-header'>
+<h1 class='post-title'>Using a Phoenix app as a dependency - a start</h1>
+<section class='post-meta'>
+<time class='post-date' datetime='2016-03-15'>
+15 March 2016
+</time>
+on <a href='/tag/elixir/'>Elixir</a>, <a href='/tag/phoenix/'>Phoenix</a>
+</section>
+</header>
+<section class='post-content'><p>The purpose of this post is start the process of modifying an existing
+Phoenix application (a <code>Child</code>) so it can be used by another Phoenix applications
+(a <code>Parent</code>) as a dependency. There are two victory conditions:</p>
+
+<ol>
+<li>The <code>Child</code> application is fully independent and works as a standalone
+when running <code>mix phoenix.server</code> or <code>mix test</code>.</li>
+<li>The <code>Parent</code> application requires minimal modification to enable
+passing <code>%Conn{}</code> information to child.</li>
+</ol>
+
+<p><strong>TLDR:</strong> Final code is located <a rel="nofollow" href="https://github.com/maxneuvians/phoenix_dependency_test">here</a>.</p>
+
+<h4>Initial issues</h4>
+
+<p>There are some initial issues in tackling this problem and most of them stem
+from figuring out how to properly route requests that belong to the <code>Child</code> from
+the <code>Parent</code>.</p>
+
+<p><code>Phoenix.Router</code> provides the <code>forward</code> macro which allows you to map a url endpoint
+in a router to an arbitrary <code>Plug</code>. However, the documentation specifically <a href="https://github.com/phoenixframework/phoenix/blob/master/lib/phoenix/router.ex#L637"
+target="blank">states</a></p>
+<pre class="highlight plaintext"><code>Note, however, that we don't advise forwarding to another
+endpoint. The reason is that plugs defined by your app
+and the forwarded endpoint would be invoked twice, which
+may lead to errors
+</code></pre>
+
+<p>This makes sense as the <code>Plug</code> pipelines in each <code>Endpoint</code> transform the
+<code>%Conn{}</code> specific to that endpoint. So if you follow the recommendation and forward
+the url to <code>Child.Router</code> instead of <code>Child.Endpoint</code> you are avoiding this problem,
+but you are also missing out on crucial plugs like <code>Plug.Static</code> which will load
+static content inside the <code>Child.Endpoint</code>. You would have to start unloading that
+functionality to <code>Plug.Static</code> in <code>Parent.Endpoint</code> which would start messing with
+our second victory condition.</p>
+
+<h4>Injecting into the Endpoint Pipeline</h4>
+
+<p>To avoid the cautionary statement above, I decided that it would be best to intercept
+the request before it hits the <code>Parent.Endpoint</code>. As <code>Endpoint</code> is composed of <code>Plugs</code>
+I thought I could create a <code>__using__</code> macro inside my <code>Child</code> that the <code>Parent</code> could
+invoke to capture any connection destined for the <code>Child</code> application. What I came up
+with was this in <code>child/lib/child/mount.ex</code>:</p>
+<pre class="highlight plaintext"><code>defmodule Child.Mount do
+
+  defmacro __using__(path: path) do
+    quote bind_quoted: [path: path] do
+      unless String.starts_with?(path, "/"), do: path = "/" &lt;&gt; path
+      plug Child.Plug.Mount, path
+      socket "#{path}/socket", Child.UserSocket
+    end
+  end
+
+end
+</code></pre>
+
+<p>which could invoked from the <code>Parent.Endpoint</code> like this in <code>parent/lib/parent/endpoint.ex</code>:</p>
+<pre class="highlight plaintext"><code>defmodule Parent.Endpoint do
+  use Phoenix.Endpoint, otp_app: :my_app
+  use Child.Mount, path: "/test"
+</code></pre>
+
+<p>All you need to do is pass the path you want to mount the <code>Child</code> application on
+as a <code>path</code> value. The macro itself does a couple of things. First it makes sure that
+the <code>path</code> starts with a <code>/</code>. Next it invokes another <code>plug</code> called <code>Child.Plug.Mount</code>
+which will do all the heavy work. Lastly it also declares a socket on the passed <code>path</code>,
+so that any sockets that we are using in our <code>Child</code> are also available through the
+<code>Parent</code>.</p>
+
+<p>Next I defined <code>Child.Plug.Mount</code> in <code>child/lib/child/plug/mount.ex</code>:</p>
+<pre class="highlight plaintext"><code>defmodule Child.Plug.Mount do
+  import Plug.Conn
+
+  def init(default), do: default
+
+  def call(conn, path) do
+    if String.starts_with? conn.request_path, path do
+      conn
+      |&gt; assign(:mount_path, path)
+      |&gt; Phoenix.Router.Route.forward(
+        [String.replace(path, "/", "")],
+        Child.Endpoint,
+        [])
+      |&gt; halt
+    else
+      conn
+    end
+  end
+end
+</code></pre>
+
+<p>The code contains the required <code>init/1</code> and <code>call/2</code> functions. <code>call/2</code> checks if
+the <code>request_path</code> inside our <code>conn</code> matches the mount path we declared. If it does,
+it assigns the path as a variable <code>:mount_path</code> to the <code>conn</code> and then uses
+<code>Phoenix.Router.Route.forward/3</code> to invoke the <code>Child.Endpoint</code>. Following that we
+need to call <code>halt</code> otherwise the <code>Parent.Endpoint</code> plug pipeline will get called
+as well. If the <code>request_path</code> does not match it should just pass the <code>conn back</code>.
+ <strong>Please note that both of these files are located inside the Child app, which
+also helps with Victory Condition #2</strong></p>
+
+<h4>What is the assign(:mount_path) variable about?</h4>
+
+<p>So there are a couple of other issues when you are invoking a phoenix app from within
+a mount point. For example, <code>&lt;%= static_path(@conn, &quot;/css/app.css&quot;) %&gt;</code> always returns
+<code>/css/app.css</code> unless you mess with <code>Plug.Static</code>. What you want though is to access the
+css under the <code>path</code> specified in the <code>use</code> call. ex: <code>/test/css/app.css</code>. You can do this by
+making the following changes to certain paths in your <code>Child</code> templates:</p>
+
+<p><code>&lt;%= static_path(@conn, &quot;/css/app.css&quot;) %&gt;</code></p>
+
+<p>=&gt;</p>
+
+<p><code>&lt;%= static_path(@conn, &quot;#{@conn.assigns[:mount_path]}/css/app.css&quot;) %&gt;</code></p>
+
+<p>and</p>
+
+<p><code>&lt;%= static_path(@conn, &quot;/js/app.js&quot;) %&gt;</code></p>
+
+<p>=&gt;</p>
+
+<p><code>&lt;%= static_path(@conn, &quot;#{@conn.assigns[:mount_path]}/js/app.js&quot;) %&gt;</code></p>
+
+<p>The nice thing is that if <code>:mount_path</code> is not defined it is just an empty string,
+thus ensuring Victory Condition #1.</p>
+
+<h4>So what about sockets?</h4>
+
+<p>If you remember we declared our <code>Child</code> sockets in our <code>__using__</code> macro:</p>
+
+<p><code>socket &quot;#{path}/socket&quot;, Child.UserSocket</code></p>
+
+<p>which means that any javascript socket call, (for example in <code>/web/static/js/socket.js</code>) needs
+to know about the moved socket. To do this we can make the following changes:</p>
+
+<p>Declare a global ᶘᵒᴥᵒᶅ variable and then include that in our socket load paths:</p>
+
+<p>Inside <code>/web/templates/layout.eex</code>:</p>
+<pre class="highlight plaintext"><code>&lt;/div&gt; &lt;!-- /container --&gt;
+&lt;script&gt; MOUNT_PATH = "&lt;%= @conn.assigns[:mount_path] %&gt;"&lt;/script&gt;
+&lt;script src="&lt;%= static_path(@conn, "#{@conn.assigns[:mount_path]}/js/app.js") %&gt;"&gt;&lt;/script&gt;
+</code></pre>
+
+<p>and then when invoking a socket connection - for example in <code>socket.js</code>:</p>
+<pre class="highlight plaintext"><code>let socket = new Socket(MOUNT_PATH + "/socket", {params: {token: window.userToken}})
+</code></pre>
+
+<p>Again if <code>:mount_path</code> is not defined, nothing bad happens.</p>
+
+<h4>uh &hellip; Victory?</h4>
+
+<p>Not sure - on the surface it works. To try it out yourself create a new Phoenix
+project and adding the following to your dependencies:</p>
+
+<p><code>{:phoenix_dependency_test, github: &quot;maxneuvians/phoenix_dependency_test&quot;}</code></p>
+
+<p>and then include it in your applications:</p>
+
+<p><code>applications: [:phoenix, :phoenix_html, :cowboy, :logger, :gettext, :phoenix_dependency_test]]</code></p>
+
+<p>Now include the <code>use</code> call inside your <code>Endpoint</code>:</p>
+<pre class="highlight plaintext"><code>defmodule MyApp.Endpoint do
+  use Phoenix.Endpoint, otp_app: :main
+  use PhoenixDependencyTest.Mount, path: "/test"
+</code></pre>
+
+<p>where you can replace the <code>path</code> with an arbitrary mount point.</p>
+
+<p>Run <code>mix phoenix.server</code>, hit the <code>/test</code> endpoint and then you should see
+something like this:</p>
+
+<p><img alt="Image of PhoenixDependencyTest" src="/images/phoenix_dependency_test.png" /></p>
+
+<p>which is the content for the <code>Child</code></p>
+
+<h4>Potential problems</h4>
+
+<p>Here are some potential issues I am trying to work through:</p>
+
+<ul>
+<li>Shared sessions - right now each app will have its own session</li>
+<li>Database migrations - you would need to write <code>mix</code> tasks for your dependent
+applications</li>
+<li>Complex applications - the sample <code>Child</code> app is really simple and there might
+be a lot more problems ahead</li>
+</ul>
+
+<h4>Conclusion</h4>
+
+<p>I am a lot more confident that I can get this to work than before I started. I wish
+there was a golden path to follow here that made it all simple and easy, but I could not
+find one. I am happy for any suggestions or comments, please email me at max@neuvians.io or send
+me a tweet at @maxneuvians.</p>
+</section>
+<footer class='post-footer'>
+<figure class='author-image'>
+<a class='img' href='/author/max-neuvians/' style='background-image: url(https://www.gravatar.com/avatar/8b8b2f3881b25d0c7506dd5738c3be50?size=68)'>
+<span class='hidden'>Max Neuvians's Picture</span>
+</a>
+</figure>
+<section class='author'>
+<h4>
+<a href='/author/max-neuvians/'>Max Neuvians</a>
+</h4>
+<p></p>
+Read
+<a href='/author/max-neuvians/'>more posts</a>
+by this author.
+<div class='author-meta'>
+<span class='author-location icon-location'>Ottawa, ON, Canada</span>
+<span class='author-link icon-link'>
+<a href='http://neuvians.io'>http://neuvians.io</a>
+</span>
+</div>
+</section>
+<section class='share'>
+<h4>Share this post</h4>
+<a class='icon-twitter' href='https://twitter.com/intent/tweet?text=Using a Phoenix app as a dependency - a start&amp;amp;url=http://www.neuvians.io/2016/03/15/using-a-phoenix-app-as-a-dependency/' onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+<span class='hidden'>Twitter</span>
+</a>
+<a class='icon-facebook' href='https://www.facebook.com/sharer/sharer.php?u=http://www.neuvians.io/2016/03/15/using-a-phoenix-app-as-a-dependency/' onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+<span class='hidden'>Facebook</span>
+</a>
+<a class='icon-google-plus' href='https://plus.google.com/share?url=http://www.neuvians.io/2016/03/15/using-a-phoenix-app-as-a-dependency/' onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+<span class='hidden'>Google+</span>
+</a>
+</section>
+</footer>
+</article>
+</main>
+<aside class='read-next'>
+<a class='no-cover read-next-story' href='/2016/03/03/generating-a-ssh-key-pair-using-elixir/'>
+<section class='post'>
+<h2>Generating a SSH key pair in Elixir</h2>
+<p>Below is some boiler plate code to create and manage SSH keys inside a Phoenix application. The keys should&hellip;</p>
+</section>
+</a>
+</aside>
+
+<footer class='site-footer clearfix'>
+<section class='copyright'>
+<a href='/'>Neuvians.IO</a>
+&copy;
+2016
+</section>
+<section class='poweredby'>
+Casper theme powered by
+<a href='https://ghost.org'>Ghost | Modified by Neuvians.io</a>
+</section>
+</footer>
+</div>
+<script src="/javascripts/application.js"></script>
+<script type='text/javascript'>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+ga('create', 'UA-67730011-1', 'auto');
+ga('send', 'pageview');
+</script>
+</body>
+</html>

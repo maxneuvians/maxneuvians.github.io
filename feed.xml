@@ -5,10 +5,23 @@
   <id>http://www.neuvians.io</id>
   <link href="http://www.neuvians.io"/>
   <link href="http://www.neuvians.io/feed.xml" rel="self"/>
-  <updated>2016-03-02T19:00:00-05:00</updated>
+  <updated>2016-03-14T20:00:00-04:00</updated>
   <author>
     <name>Max Neuvians</name>
   </author>
+  <entry>
+    <title>Using a Phoenix app as a dependency - a start</title>
+    <link rel="alternate" href="http://www.neuvians.io/2016/03/15/using-a-phoenix-app-as-a-dependency/"/>
+    <id>http://www.neuvians.io/2016/03/15/using-a-phoenix-app-as-a-dependency/</id>
+    <published>2016-03-14T20:00:00-04:00</published>
+    <updated>2016-03-15T17:52:48-04:00</updated>
+    <author>
+      <name>Max Neuvians</name>
+    </author>
+    <summary type="html">The purpose of this post is start the process of modifying an existing
+Phoenix application (a Child) so it can be used by another Phoenix applications
+(a Parent) as a dependency. There are two victory</summary>
+  </entry>
   <entry>
     <title>Generating a SSH key pair in Elixir</title>
     <link rel="alternate" href="http://www.neuvians.io/2016/03/03/generating-a-ssh-key-pair-using-elixir/"/>
@@ -73,22 +86,6 @@ Anybody familiar with the</summary>
     <id>http://www.neuvians.io/2016/02/16/simple-phoenix-app-part-5/</id>
     <published>2016-02-15T19:00:00-05:00</published>
     <updated>2016-02-16T10:40:36-05:00</updated>
-    <author>
-      <name>Max Neuvians</name>
-    </author>
-    <summary type="html">Summary
-
-The purpose of this post is to document the creation process of
-the Coin-toss.org website using the Phoenix Web
-application framework and the Elixir programming languages. Part 4 steps
-include</summary>
-  </entry>
-  <entry>
-    <title>Coin-toss.org / Simple Phoenix application - Part 4</title>
-    <link rel="alternate" href="http://www.neuvians.io/2016/02/15/simple-phoenix-app-part-4/"/>
-    <id>http://www.neuvians.io/2016/02/15/simple-phoenix-app-part-4/</id>
-    <published>2016-02-14T19:00:00-05:00</published>
-    <updated>2016-02-15T13:56:18-05:00</updated>
     <author>
       <name>Max Neuvians</name>
     </author>

@@ -55,68 +55,74 @@
     <priority>0.5</priority>
   </url>
   <url>
+    <loc>http://www.neuvians.io/2016/03/15/using-a-phoenix-app-as-a-dependency/index.html</loc>
+    <lastmod>2016-03-15T17:52:48-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
     <loc>http://www.neuvians.io/googlef4c09d3e70c6969f/index.html</loc>
-    <lastmod>2016-03-03T18:41:34-05:00</lastmod>
+    <lastmod>2016-03-15T17:53:59-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/index.html</loc>
-    <lastmod>2016-03-03T18:41:34-05:00</lastmod>
+    <lastmod>2016-03-15T17:53:59-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/author/max-neuvians/index.html</loc>
-    <lastmod>2016-03-03T18:41:34-05:00</lastmod>
+    <lastmod>2016-03-15T17:53:59-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/tag/elixir/index.html</loc>
-    <lastmod>2016-03-03T18:41:34-05:00</lastmod>
+    <lastmod>2016-03-15T17:53:59-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/tag/phoenix/index.html</loc>
-    <lastmod>2016-03-03T18:41:34-05:00</lastmod>
+    <lastmod>2016-03-15T17:53:59-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/tag/pdf/index.html</loc>
-    <lastmod>2016-03-03T18:41:34-05:00</lastmod>
+    <lastmod>2016-03-15T17:53:59-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/tag/exometer/index.html</loc>
-    <lastmod>2016-03-03T18:41:34-05:00</lastmod>
+    <lastmod>2016-03-15T17:53:59-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/page/2/index.html</loc>
-    <lastmod>2016-03-03T18:41:34-05:00</lastmod>
+    <lastmod>2016-03-15T17:53:59-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/author/max-neuvians/page/2/index.html</loc>
-    <lastmod>2016-03-03T18:41:34-05:00</lastmod>
+    <lastmod>2016-03-15T17:53:59-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/tag/elixir/page/2/index.html</loc>
-    <lastmod>2016-03-03T18:41:34-05:00</lastmod>
+    <lastmod>2016-03-15T17:53:59-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>http://www.neuvians.io/tag/phoenix/page/2/index.html</loc>
-    <lastmod>2016-03-03T18:41:34-05:00</lastmod>
+    <lastmod>2016-03-15T17:53:59-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
