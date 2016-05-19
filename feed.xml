@@ -5,10 +5,24 @@
   <id>http://www.neuvians.io</id>
   <link href="http://www.neuvians.io"/>
   <link href="http://www.neuvians.io/feed.xml" rel="self"/>
-  <updated>2016-03-23T20:00:00-04:00</updated>
+  <updated>2016-05-18T20:00:00-04:00</updated>
   <author>
     <name>Max Neuvians</name>
   </author>
+  <entry>
+    <title>Elixir - OpenSSL might not be installed on this system.</title>
+    <link rel="alternate" href="http://www.neuvians.io/2016/05/19/Elixir-crypto-load-error/"/>
+    <id>http://www.neuvians.io/2016/05/19/Elixir-crypto-load-error/</id>
+    <published>2016-05-18T20:00:00-04:00</published>
+    <updated>2016-05-19T11:08:23-04:00</updated>
+    <author>
+      <name>Max Neuvians</name>
+    </author>
+    <summary type="html">Does this look like a familiar error message?
+10:51:54.415 [error] Unable to load crypto library. Failed with error:
+":load, Library load-call unsuccessful."
+OpenSSL might not be installed on this system</summary>
+  </entry>
   <entry>
     <title>Supervisor.start_children blocks</title>
     <link rel="alternate" href="http://www.neuvians.io/2016/03/24/supervisor-start-children-blocks/"/>
@@ -77,20 +91,5 @@ there is</summary>
 Exometer is an incredibly robust
 package for Erlang to monitor system performance as well as any other type of
 events one might be interested</summary>
-  </entry>
-  <entry>
-    <title>Using WKHTMLTOPDF in Phoenix as a Plug</title>
-    <link rel="alternate" href="http://www.neuvians.io/2016/02/18/wkhtmltopdf-elixir-plug-for-phoenix/"/>
-    <id>http://www.neuvians.io/2016/02/18/wkhtmltopdf-elixir-plug-for-phoenix/</id>
-    <published>2016-02-17T19:00:00-05:00</published>
-    <updated>2016-02-18T11:34:17-05:00</updated>
-    <author>
-      <name>Max Neuvians</name>
-    </author>
-    <summary type="html">One really nice feature in the Rails world is the use of middleware to intercept
-requests and transform the output. This also exists in Elixir / Phoenix with the
-use of Plug.
-
-Anybody familiar with the</summary>
   </entry>
 </feed>
